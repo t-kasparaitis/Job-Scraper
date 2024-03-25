@@ -1,0 +1,13 @@
+1. Create a file called config.ini on your Windows Desktop
+2. Inside the file have the following (change keyword/location):
+
+[credentials]
+username = youremail@someprovider.com
+password = yourpassword
+[searchOne]
+keywords = junior developer
+location = remote
+[searchTwo]
+keywords = junior developer OR QA
+location = Columbus, Ohio Metropolitan Area
+
