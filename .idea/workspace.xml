@@ -4,16 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/Job Scraper.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ReadMe" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-    </list>
+    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Works up to job search page, need to fix down chevron causing a crash" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -86,6 +77,20 @@
       <option name="presentableId" value="Default" />
       <updated>1711258769158</updated>
     </task>
+    <task id="LOCAL-00001" summary="Works up to job search page, need to fix down chevron causing a crash">
+      <option name="closed" value="true" />
+      <created>1711395760091</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1711395760091</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CHECK_NEW_TODO" value="false" />
+    <MESSAGE value="Works up to job search page, need to fix down chevron causing a crash" />
+    <option name="LAST_COMMIT_MESSAGE" value="Works up to job search page, need to fix down chevron causing a crash" />
   </component>
 </project>
