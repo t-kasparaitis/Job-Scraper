@@ -1,5 +1,13 @@
-1. Create a file called config.ini on your Windows Desktop
-2. Inside the file have the following (change keyword/location):
+https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
+### Getting Started
+Download PyCharm community edition: https://www.jetbrains.com/pycharm/download/?section=windows
+Go to Terminal from PyCharm & type: pip install selenium
+Install & use SQLite browser for the scraped data:
+https://sqlitebrowser.org/
+
+## Creating the config.ini File on your Desktop (Windows Required)
+Make sure you can view file extensions, create a text file & rename it to config.ini.
+Inside of it paste the following lines and change to your LinkedIn credentials/search criteria.
 
 [credentials]
 username = youremail@someprovider.com

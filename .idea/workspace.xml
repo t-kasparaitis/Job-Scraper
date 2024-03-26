@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Works up to job search page, need to fix down chevron causing a crash" />
+    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Missed file">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ReadMe" beforeDir="false" afterPath="$PROJECT_DIR$/ReadMe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -34,7 +38,8 @@
     "Python.main.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master"
+    "git-widget-placeholder": "master",
+    "settings.editor.selected.configurable": "preferences.toDoOptions"
   }
 }]]></component>
   <component name="RunManager">
@@ -85,12 +90,21 @@
       <option name="project" value="LOCAL" />
       <updated>1711395760091</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Missed file">
+      <option name="closed" value="true" />
+      <created>1711396280288</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1711396280288</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="Works up to job search page, need to fix down chevron causing a crash" />
-    <option name="LAST_COMMIT_MESSAGE" value="Works up to job search page, need to fix down chevron causing a crash" />
+    <MESSAGE value="Missed file" />
+    <option name="LAST_COMMIT_MESSAGE" value="Missed file" />
   </component>
 </project>
