@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Missed file">
+    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Is able to scrape a few jobs from a single page with details such as ID, job link, title &amp; company.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReadMe" beforeDir="false" afterPath="$PROJECT_DIR$/ReadMe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -98,13 +97,22 @@
       <option name="project" value="LOCAL" />
       <updated>1711396280288</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Is able to scrape a few jobs from a single page with details such as ID, job link, title &amp; company.">
+      <option name="closed" value="true" />
+      <created>1711431045676</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1711431045676</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="Works up to job search page, need to fix down chevron causing a crash" />
     <MESSAGE value="Missed file" />
-    <option name="LAST_COMMIT_MESSAGE" value="Missed file" />
+    <MESSAGE value="Is able to scrape a few jobs from a single page with details such as ID, job link, title &amp; company." />
+    <option name="LAST_COMMIT_MESSAGE" value="Is able to scrape a few jobs from a single page with details such as ID, job link, title &amp; company." />
   </component>
 </project>
