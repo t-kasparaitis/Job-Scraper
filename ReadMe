@@ -1,9 +1,12 @@
 https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
-### Getting Started
+# Getting Started
 Download PyCharm community edition: https://www.jetbrains.com/pycharm/download/?section=windows
 Go to Terminal from PyCharm & type: pip install selenium
 Install & use SQLite browser for the scraped data:
 https://sqlitebrowser.org/
+
+## Since maximizing the window affected the number of job cards touched when I was troubleshooting,
+I think that the resolution you run this program at is important. Mine is 1920 x 1080 (higher should be ok).
 
 ## Creating the config.ini File on your Desktop (Windows Required)
 Make sure you can view file extensions, create a text file & rename it to config.ini.
