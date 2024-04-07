@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Introduced some more logic such as looping through elements, job cards etc. However, still getting only 7 of 25 job cards even with scrolling.">
+    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Able to loop through all 25 listings on a single page. Need to account for recaptcha situations but only hit 1 of those so far.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReadMe" beforeDir="false" afterPath="$PROJECT_DIR$/ReadMe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -114,7 +113,15 @@
       <option name="project" value="LOCAL" />
       <updated>1711443887014</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Able to loop through all 25 listings on a single page. Need to account for recaptcha situations but only hit 1 of those so far.">
+      <option name="closed" value="true" />
+      <created>1711534229907</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1711534229907</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -123,6 +130,7 @@
     <MESSAGE value="Missed file" />
     <MESSAGE value="Is able to scrape a few jobs from a single page with details such as ID, job link, title &amp; company." />
     <MESSAGE value="Introduced some more logic such as looping through elements, job cards etc. However, still getting only 7 of 25 job cards even with scrolling." />
-    <option name="LAST_COMMIT_MESSAGE" value="Introduced some more logic such as looping through elements, job cards etc. However, still getting only 7 of 25 job cards even with scrolling." />
+    <MESSAGE value="Able to loop through all 25 listings on a single page. Need to account for recaptcha situations but only hit 1 of those so far." />
+    <option name="LAST_COMMIT_MESSAGE" value="Able to loop through all 25 listings on a single page. Need to account for recaptcha situations but only hit 1 of those so far." />
   </component>
 </project>
