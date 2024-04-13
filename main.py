@@ -1,7 +1,6 @@
 import configparser
 import csv
 import os
-import math
 import time
 import random
 from datetime import datetime
@@ -29,69 +28,95 @@ def scroll_to_end(scrollable_element):
         time.sleep(random.uniform(1, 2))
 
 
-# NOTE: Due to recursion, resource usage can be an issue from multiple instances of the same function before completion
-def scrape_job_cards(list_of_elements, job_cards_processed, pages_processed, total_pages):
-    for element in list_of_elements:
-        try:
-            data_job_id = element.get_attribute("data-job-id")
-            job_link = "https://www.linkedin.com/jobs/view/" + data_job_id
-            # Aria label is an accessibility label which seems to have the job title (a more reliable grab):
-            aria_label = element.find_element(By.CSS_SELECTOR, "[aria-label]")
-            job_title = aria_label.get_attribute("aria-label")
-            job_company = element.find_element(
+def scrape_job_cards(list_of_elements):
+    try:
+        for element in list_of_elements:
+            linked_in_id = element.get_attribute("data-job-id")
+            link = "https://www.linkedin.com/jobs/view/" + linked_in_id
+            # FIXME: something wrong here with the way title & company are being grabbed that causes a crash on first page
+            aria_label = element.find_element(By.CSS_SELECTOR, 'a.job-card-container__link[aria-label][tabindex="0"]')
+            title = aria_label.get_attribute("aria-label")
+            # FIXME: maybe change the code below to get attribute after locating element?
+            company = element.find_element(
                 By.XPATH, ".//span[contains(@class, 'job-card-container__primary-description')]").text
-            scraped_job_listings[data_job_id] = {
-                'link': job_link,
-                'title': job_title,
-                'company': job_company
+            scraped_job_listings[linked_in_id] = {
+                'link': link,
+                'title': title,
+                'company': company
             }
-            job_cards_processed += 1
-            if job_cards_processed % 25 == 0:
-                pages_processed += 1
-                if pages_processed == total_pages:
-                    return
-                else:
-                    time.sleep(random.uniform(3, 6))
-                    next_page_button = driver.find_element(By.XPATH,
-                                                           f"//button[@aria-label='Page {pages_processed + 1}']")
-                    next_page_button.click()
-                    time.sleep(random.uniform(5, 10))
-                    scroll_to_end(driver.find_element(By.CLASS_NAME, "jobs-search-results-list"))
-                    scrape_job_cards(driver.find_elements(By.CSS_SELECTOR, "[data-job-id]"),
-                                     job_cards_processed, pages_processed, total_pages)
-        except NoSuchElementException:
-            pass
+    except NoSuchElementException:
+        pass
 
 
-def get_total_pages():
-    listings_element = wait.until(ec.element_to_be_clickable(
-        (By.XPATH, "//div[@class='jobs-search-results-list__subtitle']"))
-    )
-    listings_text = listings_element.text
-    total_listings_str = listings_text.strip().split()[0]  # Get the first word (our number of results)
-    total_listings_str = total_listings_str.replace(',', '')  # Remove comma(s) in for example 1,000
-    total_listings = int(total_listings_str)
-    listings_per_page = 25
-    return math.ceil(total_listings / listings_per_page)
+def get_next_page():
+    current_page_button = driver.find_element(By.XPATH, "//button[@aria-current='true']")
+    current_page_label = current_page_button.get_attribute("aria-label")
+    # Though LinkedIn can show "..." instead of a page number, the aria-label will always have the Page # due to ADA
+    next_page_number = int(current_page_label.split()[1]) + 1
+    try:
+        next_page_button = driver.find_element(By.XPATH, f"//button[@aria-label='Page {next_page_number}']")
+        return next_page_button
+    except NoSuchElementException:
+        return None
 
 
 def write_to_csv(job_listings):
-    output_dir = 'job_listings_data'
+    output_dir = os.path.join(os.path.join(os.environ['USERPROFILE'], 'Desktop'), 'JobScraper')
     os.makedirs(output_dir, exist_ok=True)
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f'job_listings_{timestamp}.csv'
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M')
+    filename = f'LinkedIn_{timestamp}.csv'
     filepath = os.path.join(output_dir, filename)
     with open(filepath, 'w', newline='', encoding='utf-8') as csv_file:
-        fieldnames = ['job_id', 'job_title', 'job_company', 'job_link']
+        fieldnames = ['linked_in_id', 'title', 'company', 'link']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
-        for job_id, listing in job_listings.items():
+        for linked_in_id, listing in job_listings.items():
             writer.writerow({
-                'job_id': job_id,
-                'job_title': listing['job_title'],
-                'job_company': listing['job_company'],
-                'job_link': listing['job_link']
+                'linked_in_id': linked_in_id,
+                'title': listing['title'],
+                'company': listing['company'],
+                'link': listing['link']
             })
+
+
+def scrape_job_pages():
+    reset_job_filters()
+    apply_job_filters()
+    while True:
+        time.sleep(random.uniform(3, 6))
+        scroll_to_end(driver.find_element(By.CLASS_NAME, "jobs-search-results-list"))
+        scrape_job_cards(driver.find_elements(By.CSS_SELECTOR, "[data-job-id]"))
+        time.sleep(random.uniform(3, 6))
+        if get_next_page() is None:
+            break
+        get_next_page().click()
+        time.sleep(random.uniform(5, 10))
+        scroll_to_end(driver.find_element(By.CLASS_NAME, "jobs-search-results-list"))
+        scrape_job_cards(driver.find_elements(By.CSS_SELECTOR, "[data-job-id]"))
+    
+
+def reset_job_filters():
+    # Clear out any filters if there are any from previous uses or being signed in to LinkedIn etc.:
+    try:
+        reset_applied_filters = WebDriverWait(driver, 5).until(ec.element_to_be_clickable(
+            (By.XPATH, "//button[@aria-label='Reset applied filters' and span[text()='Reset']]"))
+        )
+        reset_applied_filters.click()
+    except NoSuchElementException:
+        pass
+    except TimeoutException:
+        pass
+
+
+def apply_job_filters():
+    button = WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.ID, "searchFilter_timePostedRange")))
+    button.click()
+    previous_day = WebDriverWait(driver, 10).until(
+        ec.element_to_be_clickable((By.XPATH, "//span[text()='Past 24 hours']")))
+    previous_day.click()
+    show_results = WebDriverWait(driver, 10).until(
+        ec.element_to_be_clickable((By.CSS_SELECTOR, '[data-control-name="filter_show_results"]')))
+    show_results.click()
 
 
 config_file_path = os.path.join(os.path.join(os.environ['USERPROFILE'], 'Desktop'), 'config.ini')
@@ -148,27 +173,12 @@ time.sleep(random.uniform(1, 2))
 keyword_box.send_keys(Keys.ENTER)
 time.sleep(random.uniform(1, 2))
 
-# Clear out any filters if there are any from previous uses or being signed in to LinkedIn etc.:
-try:
-    reset_applied_filters = WebDriverWait(driver, 5).until(ec.element_to_be_clickable(
-        (By.XPATH, "//button[@aria-label='Reset applied filters' and span[text()='Reset']]"))
-    )
-    reset_applied_filters.click()
-except NoSuchElementException:
-    pass
-# FIXME: TimeoutException is being triggered
-except TimeoutException:
-    print(TimeoutException)
-    pass
+scraped_job_listings = {}
+scrape_job_pages()
+write_to_csv(scraped_job_listings)
 
 # TODO: apply filter for remote for SearchOne; add DatePosted as a measure of system time - what they have on listing
 # TODO: think about some search options since LI/Indeed search isn't great - for example developer I, SDE I etc.
-
-scraped_job_listings = {}
-scroll_to_end(driver.find_element(By.CLASS_NAME, "jobs-search-results-list"))
-scrape_job_cards(driver.find_elements(By.CSS_SELECTOR, "[data-job-id]"),
-                 0, 0, get_total_pages())
-
 # TODO: maybe think about an indefinite amount of searches, how to read the config.ini in that case & iterate
 # TODO: idea - feed jobs found to ChatGPT to filter out things I don't want
 # TODO: check for unique job identifiers (for example Indeed has repeats where jk=# is repeated among different pages)

@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Able to loop through all 25 listings on a single page. Need to account for recaptcha situations but only hit 1 of those so far.">
+    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Able to loop through multiple pages &amp; scrape listings to a dictionary. There's a function for writing the dictionary to csv, but it is not used yet. Next, need to take the csv and write to a database.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -22,6 +22,23 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "t-kasparaitis"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="selectedUrlAndAccountId">
+      <UrlAndAccount>
+        <option name="accountId" value="17a2a0f5-90ea-4ed8-81ee-aa0f45c4c9a9" />
+        <option name="url" value="https://github.com/t-kasparaitis/Job-Scraper.git" />
+      </UrlAndAccount>
+    </option>
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/main.py" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="ProjectColorInfo"><![CDATA[{
   "associatedIndex": 0
@@ -121,7 +138,15 @@
       <option name="project" value="LOCAL" />
       <updated>1711534229907</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Able to loop through multiple pages &amp; scrape listings to a dictionary. There's a function for writing the dictionary to csv, but it is not used yet. Next, need to take the csv and write to a database.">
+      <option name="closed" value="true" />
+      <created>1712489871213</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1712489871213</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -131,6 +156,7 @@
     <MESSAGE value="Is able to scrape a few jobs from a single page with details such as ID, job link, title &amp; company." />
     <MESSAGE value="Introduced some more logic such as looping through elements, job cards etc. However, still getting only 7 of 25 job cards even with scrolling." />
     <MESSAGE value="Able to loop through all 25 listings on a single page. Need to account for recaptcha situations but only hit 1 of those so far." />
-    <option name="LAST_COMMIT_MESSAGE" value="Able to loop through all 25 listings on a single page. Need to account for recaptcha situations but only hit 1 of those so far." />
+    <MESSAGE value="Able to loop through multiple pages &amp; scrape listings to a dictionary. There's a function for writing the dictionary to csv, but it is not used yet. Next, need to take the csv and write to a database." />
+    <option name="LAST_COMMIT_MESSAGE" value="Able to loop through multiple pages &amp; scrape listings to a dictionary. There's a function for writing the dictionary to csv, but it is not used yet. Next, need to take the csv and write to a database." />
   </component>
 </project>
