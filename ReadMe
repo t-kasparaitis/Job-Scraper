@@ -2,11 +2,31 @@ https://docs.github.com/en/get-started/writing-on-github/getting-started-with-wr
 # Getting Started
 Download PyCharm community edition: https://www.jetbrains.com/pycharm/download/?section=windows
 Go to Terminal from PyCharm & type: pip install selenium
-Install & use SQLite browser for the scraped data:
-https://sqlitebrowser.org/
+Go to Terminal from PyCharm & type: pip install pyspark
+Download & Install Java (required for pyspark):
+https://www.oracle.com/java/technologies/downloads/
+Edit Environment variables => create JAVA_HOME
+Set to C:\Program Files\Java\jdk-22 (example, replace with your own)
+Check in CMD that it works by typing: java -version
+Restart PyCharm if it was running
+Download PostgreSQL driver:
+https://jdbc.postgresql.org/download/
+Place in Job Scraper/.venv/Lib/site-packages/pyspark/jars
 
-## Since maximizing the window affected the number of job cards touched when I was troubleshooting,
-I think that the resolution you run this program at is important. Mine is 1920 x 1080 (higher should be ok).
+## Free universal DB Tool (supports a lot of different DBs):
+https://dbeaver.io/download/
+Open up DBeaver and then run the Database Setup.SQL script
+Note, check Show all databases when creating the connection in DBeaver (not sure why this isn't default)
+
+# Future DB Options:
+## PostgreSQL
+https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
+## Cassandra
+Download: https://cassandra.apache.org/_/download.html
+Extract with 7zip: https://www.7-zip.org/
+https://phoenixnap.com/kb/install-cassandra-on-windows
+## Mongo DB
+https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-windows/
 
 ## Creating the config.ini File on your Desktop (Windows Required)
 Make sure you can view file extensions, create a text file & rename it to config.ini.
@@ -21,4 +41,3 @@ location = remote
 [searchTwo]
 keywords = junior developer OR QA
 location = Columbus, Ohio Metropolitan Area
-

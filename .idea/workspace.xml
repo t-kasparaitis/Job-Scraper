@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Able to loop through multiple pages &amp; scrape listings to a dictionary. There's a function for writing the dictionary to csv, but it is not used yet. Next, need to take the csv and write to a database.">
+    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Removed recursion and introduced a do-while loop for better resource management. Introduced try/except logic for some crashes. Can read all pages of a query and write to csv now.">
+      <change afterPath="$PROJECT_DIR$/Database Setup.SQL" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ReadMe" beforeDir="false" afterPath="$PROJECT_DIR$/ReadMe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -23,12 +25,12 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "t-kasparaitis"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;t-kasparaitis&quot;
   }
-}]]></component>
+}</component>
   <component name="GithubPullRequestsUISettings">
     <option name="selectedUrlAndAccountId">
       <UrlAndAccount>
@@ -40,24 +42,24 @@
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/main.py" root0="FORCE_HIGHLIGHTING" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 0
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="2e7bsJWdQqIfYSELTeUfBAvO24l" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.main.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "settings.editor.selected.configurable": "preferences.toDoOptions"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.toDoOptions&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="Job Scraper" />
@@ -146,7 +148,15 @@
       <option name="project" value="LOCAL" />
       <updated>1712489871213</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Removed recursion and introduced a do-while loop for better resource management. Introduced try/except logic for some crashes. Can read all pages of a query and write to csv now.">
+      <option name="closed" value="true" />
+      <created>1713041972911</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1713041972911</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -157,6 +167,7 @@
     <MESSAGE value="Introduced some more logic such as looping through elements, job cards etc. However, still getting only 7 of 25 job cards even with scrolling." />
     <MESSAGE value="Able to loop through all 25 listings on a single page. Need to account for recaptcha situations but only hit 1 of those so far." />
     <MESSAGE value="Able to loop through multiple pages &amp; scrape listings to a dictionary. There's a function for writing the dictionary to csv, but it is not used yet. Next, need to take the csv and write to a database." />
-    <option name="LAST_COMMIT_MESSAGE" value="Able to loop through multiple pages &amp; scrape listings to a dictionary. There's a function for writing the dictionary to csv, but it is not used yet. Next, need to take the csv and write to a database." />
+    <MESSAGE value="Removed recursion and introduced a do-while loop for better resource management. Introduced try/except logic for some crashes. Can read all pages of a query and write to csv now." />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed recursion and introduced a do-while loop for better resource management. Introduced try/except logic for some crashes. Can read all pages of a query and write to csv now." />
   </component>
 </project>
