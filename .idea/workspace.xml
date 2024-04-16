@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Removed recursion and introduced a do-while loop for better resource management. Introduced try/except logic for some crashes. Can read all pages of a query and write to csv now.">
-      <change afterPath="$PROJECT_DIR$/Database Setup.SQL" afterDir="false" />
+    <list default="true" id="2753204d-1992-4043-894c-4c449df5970a" name="Changes" comment="Refactored more code into functions; Added PySpark to read from CSV files and write to a PostgreSQL database.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReadMe" beforeDir="false" afterPath="$PROJECT_DIR$/ReadMe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Database Setup.SQL" beforeDir="false" afterPath="$PROJECT_DIR$/Database Setup.SQL" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -51,15 +50,15 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.toDoOptions&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.main.executor": "Debug",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "settings.editor.selected.configurable": "preferences.toDoOptions"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="Job Scraper" />
@@ -156,7 +155,15 @@
       <option name="project" value="LOCAL" />
       <updated>1713041972911</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Refactored more code into functions; Added PySpark to read from CSV files and write to a PostgreSQL database.">
+      <option name="closed" value="true" />
+      <created>1713218314893</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1713218314893</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -168,6 +175,7 @@
     <MESSAGE value="Able to loop through all 25 listings on a single page. Need to account for recaptcha situations but only hit 1 of those so far." />
     <MESSAGE value="Able to loop through multiple pages &amp; scrape listings to a dictionary. There's a function for writing the dictionary to csv, but it is not used yet. Next, need to take the csv and write to a database." />
     <MESSAGE value="Removed recursion and introduced a do-while loop for better resource management. Introduced try/except logic for some crashes. Can read all pages of a query and write to csv now." />
-    <option name="LAST_COMMIT_MESSAGE" value="Removed recursion and introduced a do-while loop for better resource management. Introduced try/except logic for some crashes. Can read all pages of a query and write to csv now." />
+    <MESSAGE value="Refactored more code into functions; Added PySpark to read from CSV files and write to a PostgreSQL database." />
+    <option name="LAST_COMMIT_MESSAGE" value="Refactored more code into functions; Added PySpark to read from CSV files and write to a PostgreSQL database." />
   </component>
 </project>

@@ -3,7 +3,7 @@ import csv
 import os
 import time
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -30,8 +30,8 @@ def scroll_to_end(scrollable_element):
 
 
 def scrape_job_cards(list_of_elements):
-    try:
-        for element in list_of_elements:
+    for element in list_of_elements:
+        try:
             linked_in_id = element.get_attribute("data-job-id")
             link = "https://www.linkedin.com/jobs/view/" + linked_in_id
             # FIXME: something wrong with the way title & company are being grabbed that causes a crash on first page
@@ -40,13 +40,19 @@ def scrape_job_cards(list_of_elements):
             # FIXME: maybe change the code below to get attribute after locating element?
             company = element.find_element(
                 By.XPATH, ".//span[contains(@class, 'job-card-container__primary-description')]").text
+            time_element = element.find_element(By.CSS_SELECTOR, 'time')
+            posted_date = time_element.get_attribute("datetime")
+            time_since_post = time_element.text
             scraped_job_listings[linked_in_id] = {
                 'link': link,
                 'title': title,
-                'company': company
+                'company': company,
+                'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'posted_date': posted_date,
+                'time_since_post': time_since_post
             }
-    except NoSuchElementException:
-        pass
+        except NoSuchElementException:
+            continue
 
 
 def get_next_page():
@@ -67,7 +73,7 @@ def get_next_page():
 
 def write_to_csv(job_listings, filepath):
     with open(filepath, 'w', newline='', encoding='utf-8') as csv_file:
-        fieldnames = ['linked_in_id', 'title', 'company', 'link']
+        fieldnames = ['linked_in_id', 'title', 'company', 'link', 'time_when_scraped', 'posted_date', 'time_since_post']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
         for linked_in_id, listing in job_listings.items():
@@ -75,7 +81,10 @@ def write_to_csv(job_listings, filepath):
                 'linked_in_id': linked_in_id,
                 'title': listing['title'],
                 'company': listing['company'],
-                'link': listing['link']
+                'link': listing['link'],
+                'time_when_scraped': listing['time_when_scraped'],
+                'posted_date': listing['posted_date'],
+                'time_since_post': listing['time_since_post']
             })
     return filepath
 
@@ -137,6 +146,7 @@ def write_to_database(filepath):
     dataframe = spark.read.csv(filepath, header=True)
     dataframe = dataframe.filter(~col('linked_in_id').rlike('[^0-9]'))
     # TODO: Need to account for ID collisions, we don't want to overwrite existing IDs
+    # https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT -- on conflict do nothing
     dataframe.write.jdbc(url=connection_url, table="linkedin", mode="append", properties=connection_properties)
 
 
@@ -225,8 +235,11 @@ scrape_job_pages()
 csv_filepath = generate_filepath()
 write_to_csv(scraped_job_listings, csv_filepath)
 write_to_database(csv_filepath)
-input("Press any key in the run window to exit session")  # This pauses the script until the user does something
-driver.quit()  # This closes the browser window and exits the WebDriver session
+driver.quit()
+
+
+# NOTE: Good tests to write:
+# (1) Check that the column names I am writing to exist in the database, messed this up a few times
 
 
 # TODO: think about some search options since LI/Indeed search isn't great - for example developer I, SDE I etc.
