@@ -237,7 +237,6 @@ def security_verification():
 # driver = webdriver.Chrome(options=options)
 
 
-# TODO: Create gitignore to ignore workspace.xml etc.
 driver = webdriver.Chrome()
 driver.maximize_window()
 driver.get('https://www.linkedin.com')
