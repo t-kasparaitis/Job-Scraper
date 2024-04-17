@@ -119,13 +119,18 @@ def reset_job_filters():
 
 
 def apply_job_filters():
-    button = WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.ID, "searchFilter_timePostedRange")))
-    button.click()
-    previous_day = WebDriverWait(driver, 10).until(
-        ec.element_to_be_clickable((By.XPATH, "//span[text()='Past 24 hours']")))
-    previous_day.click()
-    show_results = WebDriverWait(driver, 10).until(
-        ec.element_to_be_clickable((By.CSS_SELECTOR, '[data-control-name="filter_show_results"]')))
+    # aria-label="Show all filters. Clicking this button displays all available filter options."
+    all_filters_button = wait.until(ec.element_to_be_clickable((
+        By.CSS_SELECTOR, "button.search-reusables__all-filters-pill-button")))
+    all_filters_button.click()
+    # Job cards don't show how long ago something was posted on the card, unless sorted by most recent:
+    most_recent_filter = wait.until(ec.element_to_be_clickable((By.XPATH, "//span[text()='Most recent']")))
+    most_recent_filter.click()
+    previous_day_filter = wait.until(ec.element_to_be_clickable((By.XPATH, "//span[text()='Past 24 hours']")))
+    previous_day_filter.click()
+    time.sleep(5)  # Give time to process search results to let the button grab be reliable
+    show_results = wait.until(
+        ec.element_to_be_clickable((By.CSS_SELECTOR, "button.search-reusables__secondary-filters-show-results-button")))
     show_results.click()
 
 
@@ -167,6 +172,7 @@ def generate_filepath():
 
 
 def sign_in():
+    # TODO: Account for auto-sign in from Google etc., probably check for page title?
     config = read_config_file()
     username = config['credentials']['username']
     password = config['credentials']['password']
@@ -176,6 +182,11 @@ def sign_in():
     username_box.send_keys(password)
     sign_in_button = wait.until(ec.element_to_be_clickable((By.XPATH, "//button[@data-id='sign-in-form__submit-btn']")))
     sign_in_button.click()
+    try:
+        WebDriverWait(driver, 10).until(ec.title_contains("Security Verification | LinkedIn"))
+        security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
+    except NoSuchElementException:
+        pass
     # Wait to check that we are on the homepage:
     wait.until(ec.title_contains("Feed | LinkedIn"))
 
@@ -213,6 +224,10 @@ def input_search_keywords():
     time.sleep(random.uniform(1, 2))
 
 
+def security_verification():
+    # There's 6 bull images we have to pick the one where the head is completely upright
+    # There's not an easy way to solve this without AI, maybe pixel analysis for which way head is pointing?
+    time.sleep(45)
 # NOTE: re-enable headless mode after this is fleshed out
 # from selenium.webdriver.chrome.options import Options
 #
@@ -221,8 +236,8 @@ def input_search_keywords():
 
 # driver = webdriver.Chrome(options=options)
 
-# TODO: Account for auto-sign in from Google etc., probably check for page title?
 
+# TODO: Create gitignore to ignore workspace.xml etc.
 driver = webdriver.Chrome()
 driver.maximize_window()
 driver.get('https://www.linkedin.com')
