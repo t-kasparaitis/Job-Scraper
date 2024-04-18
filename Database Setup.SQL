@@ -7,7 +7,5 @@ CREATE TABLE IF NOT EXISTS linkedin (
     link TEXT NOT NULL,
     title TEXT NOT NULL,
     company TEXT NOT NULL,
-    time_when_scraped TIMESTAMP,
-    posted_date TIMESTAMP,
-    time_since_post TEXT NOT NULL
+    time_when_posted TIMESTAMP NOT NULL
 );
