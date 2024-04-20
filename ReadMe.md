@@ -18,20 +18,24 @@
 - Open up DBeaver and then run the Database Setup.SQL script
 - **Note: checkmark "Show all databases" when creating the connection in DBeaver (not sure why this isn't default)**
 
-### Creating the config.ini File on your Desktop (Windows Required)
-- Make sure you can view file extensions, create a text file & rename it to config.ini.
-- Inside of it paste the following lines and change to your LinkedIn credentials/search criteria.
+### Creating the config.ini file
+- Make sure you can view file extensions, create a text file & rename it to config.ini
+- This will store your credentials, change it to your username etc.
 
-`[credentials]` <br>
-`username = youremail@someprovider.com` <br>
-`password = yourpassword` <br>
-`[searchOne]` <br>
-`keywords = junior developer` <br>
-`location = remote` <br>
-`[searchTwo]` <br>
-`keywords = junior developer OR QA` <br>
-`location = Columbus, Ohio Metropolitan Area****` <br>
+```
+[credentials]
+username = youremail@someprovider.com
+password = yourpassword
+[database]
+host = localhost
+port = 1111
+database = dbname
+username = user
+password = password
+```
 
+### Editing the searchTerms.json file
+- This file is located in the first level of the project directory and stores search terms to go through during a run
 
 ## Possible future DB options
 ### Cassandra

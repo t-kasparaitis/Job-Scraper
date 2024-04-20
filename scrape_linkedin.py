@@ -3,14 +3,16 @@ import csv
 import os
 import time
 import random
+import json
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
 
 
 def is_scroll_at_bottom(scrollable_element):
@@ -77,9 +79,9 @@ def write_to_csv(job_listings, filepath):
             })
 
 
-def scrape_job_pages():
+def scrape_job_pages(location):
     reset_job_filters()
-    apply_job_filters()
+    apply_job_filters(location)
     while True:
         time.sleep(random.uniform(3, 6))
         scroll_to_end(driver.find_element(By.CLASS_NAME, "jobs-search-results-list"))
@@ -88,10 +90,10 @@ def scrape_job_pages():
         if get_next_page() is None:
             break
         get_next_page().click()
-        time.sleep(random.uniform(5, 10))
+        time.sleep(random.uniform(7, 12))  # Introduced higher floor for "things aren't loading" (rate-limiting?)
         scroll_to_end(driver.find_element(By.CLASS_NAME, "jobs-search-results-list"))
         scrape_job_cards(driver.find_elements(By.CSS_SELECTOR, "[data-job-id]"))
-    
+
 
 def reset_job_filters():
     # Clear out any filters if there are any from previous uses or being signed in to LinkedIn etc.:
@@ -106,20 +108,59 @@ def reset_job_filters():
         pass
 
 
-def apply_job_filters():
+def apply_job_filters(location):
     # aria-label="Show all filters. Clicking this button displays all available filter options."
     all_filters_button = wait.until(ec.element_to_be_clickable((
         By.CSS_SELECTOR, "button.search-reusables__all-filters-pill-button")))
     all_filters_button.click()
+    time.sleep(2)
     # Job cards don't show how long ago something was posted on the card, unless sorted by most recent:
     most_recent_filter = wait.until(ec.element_to_be_clickable((By.XPATH, "//span[text()='Most recent']")))
     most_recent_filter.click()
+    time.sleep(2)
     previous_day_filter = wait.until(ec.element_to_be_clickable((By.XPATH, "//span[text()='Past 24 hours']")))
     previous_day_filter.click()
+    time.sleep(2)
+    # Putting remote in the search box is not enough for remote jobs, on-site/hybrid roles still show up without this:
+    if location == 'Remote':
+        scroll_increment = 500
+        for _ in range(10):
+            try:
+                time.sleep(.5)
+                target = driver.find_element(By.XPATH, "//span[text()='Remote']")
+                target.click()
+                break
+            except (NoSuchElementException, StaleElementReferenceException):
+                driver.execute_script(f"arguments[0].scrollBy(0, {scroll_increment});",
+                                      driver.find_element(By.CLASS_NAME, "artdeco-modal__content"))
+    # Similarly, if you are looking for local hybrid, remote will show up unless you checkmark on-site/hybrid:
+    # TODO: make a function that takes a list of elements as a parameter, where it checks each one is found
+    # TODO: add distance slider using action chains
+    else:
+        scroll_increment = 500
+        first_element_found = False
+        second_element_found = False
+        for _ in range(10):
+            try:
+                time.sleep(.5)
+                if not first_element_found:
+                    target = driver.find_element(By.XPATH, "//span[text()='On-site']")
+                    target.click()
+                    first_element_found = True
+                if not second_element_found:
+                    target = driver.find_element(By.XPATH, "//span[text()='Hybrid']")
+                    target.click()
+                    second_element_found = True
+                if first_element_found and second_element_found:
+                    break
+            except (NoSuchElementException, StaleElementReferenceException):
+                driver.execute_script(f"arguments[0].scrollBy(0, {scroll_increment});",
+                                      driver.find_element(By.CLASS_NAME, "artdeco-modal__content"))
     time.sleep(5)  # Give time to process search results to let the button grab be reliable
     show_results = wait.until(
         ec.element_to_be_clickable((By.CSS_SELECTOR, "button.search-reusables__secondary-filters-show-results-button")))
     show_results.click()
+    time.sleep(5)
 
 
 def read_config_file():
@@ -127,6 +168,11 @@ def read_config_file():
     config = configparser.ConfigParser()
     config.read(config_file_path)
     return config
+
+
+def read_json_file():
+    with open('search_terms.json', 'r') as json_file:
+        return json.load(json_file)
 
 
 def generate_filepath():
@@ -152,7 +198,7 @@ def sign_in():
     try:
         WebDriverWait(driver, 10).until(ec.title_contains("Security Verification | LinkedIn"))
         security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
-    except NoSuchElementException:
+    except TimeoutException:
         pass
     # Wait to check that we are on the homepage:
     wait.until(ec.title_contains("Feed | LinkedIn"))
@@ -175,17 +221,14 @@ def navigate_to_jobs():
     wait.until(ec.title_contains("Jobs | LinkedIn"))
 
 
-def input_search_keywords():
-    config = read_config_file()
+def input_search_keywords(keyword, location):
     keyword_box = wait.until(
         ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'jobs-search-box-keyword')]")))
-    search_one_keywords = config['searchOne']['keywords']
-    search_one_location = config['searchOne']['location']
-    keyword_box.send_keys(search_one_keywords)
+    keyword_box.send_keys(keyword)
     time.sleep(random.uniform(1, 2))
     location_box = wait.until(
         ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'jobs-search-box-location')]")))
-    location_box.send_keys(search_one_location)
+    location_box.send_keys(location)
     time.sleep(random.uniform(1, 2))
     keyword_box.send_keys(Keys.ENTER)
     time.sleep(random.uniform(1, 2))
@@ -195,24 +238,31 @@ def security_verification():
     # There's 6 bull images we have to pick the one where the head is completely upright
     # There's not an easy way to solve this without AI, maybe pixel analysis for which way head is pointing?
     time.sleep(45)
-# NOTE: re-enable headless mode after this is fleshed out
-# from selenium.webdriver.chrome.options import Options
-#
-# options = Options()
-# options.add_argument('--headless')
-
-# driver = webdriver.Chrome(options=options)
 
 
-driver = webdriver.Chrome()
+def scrape_search_terms():
+    search_terms = read_json_file()
+    for term in search_terms['LinkedIn_Search_Terms']:
+        global scraped_job_listings
+        scraped_job_listings = {}
+        keyword = term['keyword']
+        location = term['location']
+        navigate_to_jobs()
+        input_search_keywords(keyword, location)
+        scrape_job_pages(location)
+        csv_filepath = generate_filepath()
+        write_to_csv(scraped_job_listings, csv_filepath)
+
+
+# TODO: scrape location data
+options = Options()
+# options.add_argument('--headless')  # Disable headless mode if you are watching it run for troubleshooting/demo
+driver = webdriver.Chrome(options=options)
 driver.maximize_window()
 driver.get('https://www.linkedin.com')
 wait = WebDriverWait(driver, 10)
 sign_in()
-navigate_to_jobs()
-input_search_keywords()
+# TODO: look into best practices, this global scraped_job_listings might not be the right way
 scraped_job_listings = {}
-scrape_job_pages()
-csv_filepath = generate_filepath()
-write_to_csv(scraped_job_listings, csv_filepath)
+scrape_search_terms()
 driver.quit()

@@ -2,7 +2,7 @@ import configparser
 import os
 import shutil
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, regexp_extract, when, from_unixtime, unix_timestamp
+from pyspark.sql.functions import col, regexp_extract, when, from_unixtime, unix_timestamp, regexp_replace
 from pyspark.sql.types import IntegerType
 
 
@@ -39,10 +39,13 @@ def write_to_database(filepath):
         return
     num_col = regexp_extract(col("time_since_post"), r"(\d+)\s(\w+)", 1).cast(IntegerType()).alias("num_col")
     unit_col = regexp_extract(col("time_since_post"), r"(\d+)\s(\w+)", 2).alias("unit_col")
+    # If you catch something right as it posted, the text will be "Just now" but adding a .when for "now" or "just"
+    # doesn't work as you'd expect. Dataframe.show() spits out regex in the seconds_col name, so this is a workaround
+    dataframe = dataframe.withColumn("time_since_post", regexp_replace(dataframe["time_since_post"],
+                                                                       "Just now", "1 minute ago"))
     seconds_col = (when(unit_col.contains("minute"), num_col * 60)
                    .when(unit_col.contains("hour"), num_col * 60 * 60)
                    .when(unit_col.contains("day"), num_col * 60 * 60 * 24))
-    dataframe.select(num_col.alias("num_col"), unit_col.alias("unit_col"), seconds_col.alias("seconds_col"))
     time_when_posted_col = (from_unixtime(unix_timestamp(
         col("time_when_scraped")) - seconds_col, "yyyy-MM-dd HH:mm:ss")
                             .cast("timestamp").alias("time_when_posted"))
