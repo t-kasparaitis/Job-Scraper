@@ -29,15 +29,16 @@ def scroll_to_end(scrollable_element):
 def scrape_job_cards(list_of_elements):
     for element in list_of_elements:
         try:
-            linked_in_id = element.get_attribute("data-job-id")
-            link = "https://www.linkedin.com/jobs/view/" + linked_in_id
+            listing_id = element.get_attribute("data-job-id")
+            link = "https://www.linkedin.com/jobs/view/" + listing_id
             # FIXME: getting some empty grabs that are currently caused by exception handler
             aria_label = element.find_element(By.CSS_SELECTOR, 'a.job-card-container__link[aria-label][tabindex="0"]')
             title = aria_label.get_attribute("aria-label")
             company = element.find_element(
                 By.XPATH, ".//span[contains(@class, 'job-card-container__primary-description')]").text
-            scraped_job_listings[linked_in_id] = {
+            scraped_job_listings[listing_id] = {
                 'link': link,
+                'source': "LinkedIn",
                 'title': title,
                 'company': company,
                 'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -65,12 +66,13 @@ def get_next_page():
 
 def write_to_csv(job_listings, filepath):
     with open(filepath, 'w', newline='', encoding='utf-8') as csv_file:
-        fieldnames = ['linked_in_id', 'title', 'company', 'link', 'time_when_scraped', 'time_since_post']
+        fieldnames = ['listing_id', 'source', 'title', 'company', 'link', 'time_when_scraped', 'time_since_post']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
-        for linked_in_id, listing in job_listings.items():
+        for listing_id, listing in job_listings.items():
             writer.writerow({
-                'linked_in_id': linked_in_id,
+                'listing_id': listing_id,
+                'source': listing['source'],
                 'title': listing['title'],
                 'company': listing['company'],
                 'link': listing['link'],
@@ -256,7 +258,7 @@ def scrape_search_terms():
 
 # TODO: scrape location data
 options = Options()
-# options.add_argument('--headless')  # Disable headless mode if you are watching it run for troubleshooting/demo
+options.add_argument('--headless')  # Disable headless mode if you are watching it run for troubleshooting/demo
 driver = webdriver.Chrome(options=options)
 driver.maximize_window()
 driver.get('https://www.linkedin.com')

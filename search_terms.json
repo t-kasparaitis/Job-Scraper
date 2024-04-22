@@ -9,12 +9,46 @@
       "location": "Columbus, Ohio Metropolitan Area"
     },
     {
+      "keyword": "Software Engineer",
+      "location": "Remote"
+    },
+    {
+      "keyword": "Software Engineer",
+      "location": "Columbus, Ohio Metropolitan Area"
+    },
+    {
       "keyword": "QA",
       "location": "Remote"
     },
     {
       "keyword": "QA",
       "location": "Columbus, Ohio Metropolitan Area"
+    }
+  ],
+    "Indeed_Search_Terms": [
+    {
+      "keyword": "Developer",
+      "location": "Remote"
+    },
+    {
+      "keyword": "Developer",
+      "location": "Columbus, OH"
+    },
+    {
+      "keyword": "Software Engineer",
+      "location": "Remote"
+    },
+    {
+      "keyword": "Software Engineer",
+      "location": "Columbus, Ohio Metropolitan Area"
+    },
+    {
+      "keyword": "QA",
+      "location": "Remote"
+    },
+    {
+      "keyword": "QA",
+      "location": "Columbus, OH"
     }
   ]
 }

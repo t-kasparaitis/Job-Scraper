@@ -15,7 +15,7 @@ def read_config_file():
 
 def write_to_database(filepath):
     config = read_config_file()
-    spark = SparkSession.builder.appName("LinkedIn Listing Loader").getOrCreate()
+    spark = SparkSession.builder.appName("Job Listing Loader").getOrCreate()
     host = config['database']['host']
     port = config['database']['port']
     database = config['database']['database']
@@ -25,14 +25,14 @@ def write_to_database(filepath):
         "password": config['database']['password'],
         "driver": "org.postgresql.Driver"
     }
-    # NOTE: once more of this is fleshed out, change table name to not be hardcoded
     dataframe = spark.read.csv(filepath, header=True)
-    dataframe = dataframe.filter(~col('linked_in_id').rlike('[^0-9]'))
+    # TODO: introduce filtering based on 'source' if not all sources have numeric ids (Indeed etc.)
+    dataframe = dataframe.filter(~col('listing_id').rlike('[^0-9]'))
     # Filter out IDs that are already in the database, atm there is no way to do ON CONFLICT DO NOTHING using pyspark
     # https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT
-    db_dataframe = (spark.read.jdbc(url=connection_url, table="linkedin", properties=connection_properties)
-                    .select("linked_in_id"))
-    dataframe = dataframe.join(db_dataframe, on="linked_in_id", how="left_anti")
+    db_dataframe = (spark.read.jdbc(url=connection_url, table="job_listings", properties=connection_properties)
+                    .select("listing_id"))
+    dataframe = dataframe.join(db_dataframe, on="listing_id", how="left_anti")
     # It's entirely possible that a dataframe is empty/already scraped for specific or less popular search terms:
     if dataframe.isEmpty():
         print(f"The DataFrame is empty for file: {filepath}")
@@ -51,8 +51,8 @@ def write_to_database(filepath):
                             .cast("timestamp").alias("time_when_posted"))
     dataframe = dataframe.withColumn("time_when_posted", time_when_posted_col)
     dataframe.select(
-        ["linked_in_id", "title", "company", "link", "time_when_posted"]
-    ).write.jdbc(url=connection_url, table="linkedin", mode="append", properties=connection_properties)
+        ["listing_id", "source", "title", "company", "link", "time_when_posted"]
+    ).write.jdbc(url=connection_url, table="job_listings", mode="append", properties=connection_properties)
 
 
 def get_csv_files():

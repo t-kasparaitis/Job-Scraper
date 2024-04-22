@@ -1,11 +1,11 @@
--- Create a new PostgreSQL database named 'job_listings' manually then paste everything below this line:
--- May need to do a generate script later to update more columns etc.
+-- Will need to create a job_listings PostgreSQL database and then run this script:
 
--- Create the 'LinkedIn' table
-CREATE TABLE IF NOT EXISTS linkedin (
-    linked_in_id TEXT PRIMARY KEY,
-    link TEXT NOT NULL,
-    title TEXT NOT NULL,
-    company TEXT NOT NULL,
-    time_when_posted TIMESTAMP NOT NULL
+CREATE TABLE public.job_listings (
+	listing_id text NOT NULL,
+	link text NOT NULL,
+	title text NOT NULL,
+	company text NOT NULL,
+	time_when_posted timestamp NOT NULL,
+	"source" text NOT NULL,
+	CONSTRAINT composite_key PRIMARY KEY (listing_id, source)
 );
