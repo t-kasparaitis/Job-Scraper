@@ -36,13 +36,19 @@ def scrape_job_cards(list_of_elements):
             title = aria_label.get_attribute("aria-label")
             company = element.find_element(
                 By.XPATH, ".//span[contains(@class, 'job-card-container__primary-description')]").text
+            location = element.find_element(
+                By.XPATH, ".//div[contains(@class, 'artdeco-entity-lockup__caption')]").text
+            compensation = element.find_element(
+                By.XPATH, ".//div[contains(@class, 'artdeco-entity-lockup__metadata')]").text
             scraped_job_listings[listing_id] = {
                 'link': link,
                 'source': "LinkedIn",
                 'title': title,
                 'company': company,
                 'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'time_since_post': element.find_element(By.CSS_SELECTOR, 'time').text
+                'time_since_post': element.find_element(By.CSS_SELECTOR, 'time').text,
+                'location': location,
+                'compensation': compensation
             }
         except NoSuchElementException:
             continue
@@ -66,7 +72,8 @@ def get_next_page():
 
 def write_to_csv(job_listings, filepath):
     with open(filepath, 'w', newline='', encoding='utf-8') as csv_file:
-        fieldnames = ['listing_id', 'source', 'title', 'company', 'link', 'time_when_scraped', 'time_since_post']
+        fieldnames = ['listing_id', 'source', 'title', 'company', 'link', 'time_when_scraped', 'time_since_post',
+                      'location', 'compensation']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
         for listing_id, listing in job_listings.items():
@@ -77,15 +84,17 @@ def write_to_csv(job_listings, filepath):
                 'company': listing['company'],
                 'link': listing['link'],
                 'time_when_scraped': listing['time_when_scraped'],
-                'time_since_post': listing['time_since_post']
+                'time_since_post': listing['time_since_post'],
+                'location': listing['location'],
+                'compensation': listing['compensation']
             })
 
 
 def scrape_job_pages(location):
     reset_job_filters()
     apply_job_filters(location)
+    time.sleep(random.uniform(3, 6))
     while True:
-        time.sleep(random.uniform(3, 6))
         scroll_to_end(driver.find_element(By.CLASS_NAME, "jobs-search-results-list"))
         scrape_job_cards(driver.find_elements(By.CSS_SELECTOR, "[data-job-id]"))
         time.sleep(random.uniform(3, 6))
@@ -93,8 +102,6 @@ def scrape_job_pages(location):
             break
         get_next_page().click()
         time.sleep(random.uniform(7, 12))  # Introduced higher floor for "things aren't loading" (rate-limiting?)
-        scroll_to_end(driver.find_element(By.CLASS_NAME, "jobs-search-results-list"))
-        scrape_job_cards(driver.find_elements(By.CSS_SELECTOR, "[data-job-id]"))
 
 
 def reset_job_filters():
@@ -125,13 +132,17 @@ def apply_job_filters(location):
     time.sleep(2)
     # Putting remote in the search box is not enough for remote jobs, on-site/hybrid roles still show up without this:
     if location == 'Remote':
+        first_element_found = False
         scroll_increment = 500
         for _ in range(10):
             try:
-                time.sleep(.5)
-                target = driver.find_element(By.XPATH, "//span[text()='Remote']")
-                target.click()
-                break
+                if not first_element_found:
+                    time.sleep(.5)
+                    target = driver.find_element(By.XPATH, "//span[text()='Remote']")
+                    target.click()
+                    first_element_found = True
+                if first_element_found:
+                    break
             except (NoSuchElementException, StaleElementReferenceException):
                 driver.execute_script(f"arguments[0].scrollBy(0, {scroll_increment});",
                                       driver.find_element(By.CLASS_NAME, "artdeco-modal__content"))
@@ -256,9 +267,8 @@ def scrape_search_terms():
         write_to_csv(scraped_job_listings, csv_filepath)
 
 
-# TODO: scrape location data
 options = Options()
-options.add_argument('--headless')  # Disable headless mode if you are watching it run for troubleshooting/demo
+# options.add_argument('--headless')  # Disable headless mode if you are watching it run for troubleshooting/demo
 driver = webdriver.Chrome(options=options)
 driver.maximize_window()
 driver.get('https://www.linkedin.com')

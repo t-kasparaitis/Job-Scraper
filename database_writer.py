@@ -33,6 +33,8 @@ def write_to_database(filepath):
     db_dataframe = (spark.read.jdbc(url=connection_url, table="job_listings", properties=connection_properties)
                     .select("listing_id"))
     dataframe = dataframe.join(db_dataframe, on="listing_id", how="left_anti")
+    # FIXME: Had one weird run that failed to grab the company name for 1 page - should have some error logging for this
+    # dataframe = dataframe.filter(dataframe.company.isNotNull())
     # It's entirely possible that a dataframe is empty/already scraped for specific or less popular search terms:
     if dataframe.isEmpty():
         print(f"The DataFrame is empty for file: {filepath}")
@@ -51,7 +53,7 @@ def write_to_database(filepath):
                             .cast("timestamp").alias("time_when_posted"))
     dataframe = dataframe.withColumn("time_when_posted", time_when_posted_col)
     dataframe.select(
-        ["listing_id", "source", "title", "company", "link", "time_when_posted"]
+        ["listing_id", "source", "title", "company", "link", "time_when_posted", "location", "compensation"]
     ).write.jdbc(url=connection_url, table="job_listings", mode="append", properties=connection_properties)
 
 
