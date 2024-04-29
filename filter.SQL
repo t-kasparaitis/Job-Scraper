@@ -14,6 +14,7 @@ where company not in (
 'Get It Recruit - Information Technology', -- Seems like a bad job board with way too much spam email & outdated listings
 'SimplyApply', -- Spammer, no profile 1-person LinkedIn "company", reposting JPMC jobs you could apply to directly
 'Opinion Focus Panel', -- Money for focus panels, probably a scam but also unrelated
+'AB Media Publishing, LLC', -- Money for focus panels, probably a scam but also unrelated (same description as above?)
 'IDR, Inc.' -- Uses "Jamie" virtual recruiter, makes you get recorded while talking to an AI for screening...
 )
 AND NOT (

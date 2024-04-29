@@ -25,7 +25,10 @@ def write_to_database(filepath):
         "password": config['database']['password'],
         "driver": "org.postgresql.Driver"
     }
-    dataframe = spark.read.csv(filepath, header=True)
+    # LinkedIn's time_since_post is a multiline column that would cause parsing issues if not accounted for:
+    dataframe = spark.read.option("encoding", "utf-8") \
+        .option("multiline", "true") \
+        .csv(filepath, header=True)
     # TODO: introduce filtering based on 'source' if not all sources have numeric ids (Indeed etc.)
     dataframe = dataframe.filter(~col('listing_id').rlike('[^0-9]'))
     # Filter out IDs that are already in the database, atm there is no way to do ON CONFLICT DO NOTHING using pyspark

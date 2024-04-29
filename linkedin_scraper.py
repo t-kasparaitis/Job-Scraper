@@ -268,7 +268,7 @@ def scrape_search_terms():
 
 
 options = Options()
-# options.add_argument('--headless')  # Disable headless mode if you are watching it run for troubleshooting/demo
+options.add_argument('--headless')  # Disable headless mode if you are watching it run for troubleshooting/demo
 driver = webdriver.Chrome(options=options)
 driver.maximize_window()
 driver.get('https://www.linkedin.com')
