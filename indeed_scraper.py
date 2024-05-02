@@ -12,17 +12,27 @@ from selenium.common.exceptions import NoSuchElementException, StaleElementRefer
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
 
 
-def is_scroll_at_bottom(scrollable_element):
-    return driver.execute_script("return arguments[0].scrollTop == "
-                                 "(arguments[0].scrollHeight - arguments[0].offsetHeight);", scrollable_element)
-
-
-def scroll_to_end(scrollable_element):
-    while not is_scroll_at_bottom(scrollable_element):
-        driver.execute_script("arguments[0].scrollBy(0, arguments[0].offsetHeight);", scrollable_element)
-        time.sleep(random.uniform(1, 2))
+def get_next_page():
+    for _ in range(20):
+        try:
+            time.sleep(.5)
+            element = driver.find_element(By.XPATH, "//a[@aria-label='Next Page']")
+            # Check if element's top & bottom are within the viewport:
+            is_visible = driver.execute_script(
+                "var rect = arguments[0].getBoundingClientRect();"
+                "return (rect.top >= 0 && rect.bottom <= window.innerHeight);",
+                element
+            )
+            if is_visible:
+                return element
+            driver.execute_script("window.scrollBy(0, 500);")
+        except (NoSuchElementException, StaleElementReferenceException):
+            driver.execute_script("window.scrollBy(0, 500);")
+            continue
+    return None
 
 
 def read_json_file():
@@ -38,32 +48,39 @@ def scrape_search_terms():
         keyword = term['keyword']
         location = term['location']
         input_search_keywords(keyword, location)
-        scrape_job_pages(location)
-        csv_filepath = generate_filepath()
-        write_to_csv(scraped_job_listings, csv_filepath)
+        try:
+            apply_job_filters(location)
+            scrape_job_pages()
+            csv_filepath = generate_filepath()
+            write_to_csv(scraped_job_listings, csv_filepath)
+        except TimeoutException:
+            print("Unable to apply filters. This can be caused by no search results, in addition to a missing element.")
+            continue
 
 
 def apply_job_filters(location):
+    time.sleep(3)
     date_posted_button = wait.until(ec.element_to_be_clickable((By.ID, "filter-dateposted")))
     date_posted_button.click()
     time.sleep(3)
     time_filter = wait.until(ec.element_to_be_clickable((By.XPATH, "//a[contains(text(), 'Last 24 hours')]")))
     time_filter.click()
-    time.sleep(5)
+    time.sleep(3)
     if location == 'Remote':
         remote_filter_button = wait.until(ec.element_to_be_clickable((By.ID, "filter-remotejob")))
         remote_filter_button.click()
         time.sleep(3)
         remote_filter = wait.until(ec.element_to_be_clickable((By.XPATH, "//a[contains(text(), 'Remote')]")))
         remote_filter.click()
-        time.sleep(5)
+        time.sleep(3)
     else:
         distance_filter_button = wait.until(ec.element_to_be_clickable((By.ID, "filter-radius")))
         distance_filter_button.click()
         time.sleep(3)
-        distance_filter = wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, "a[text(), 'Within 100 miles']")))
+        distance_filter = wait.until(
+            ec.element_to_be_clickable((By.XPATH, "//a[contains(text(), 'Within 100 miles')]")))
         distance_filter.click()
-        time.sleep(5)
+        time.sleep(3)
 
 
 def write_to_csv(job_listings, filepath):
@@ -86,41 +103,42 @@ def write_to_csv(job_listings, filepath):
             })
 
 
-def scrape_job_pages(location):
+def scrape_job_pages():
     while True:
         time.sleep(random.uniform(3, 6))
-        apply_job_filters(location)
-        scroll_to_end(driver.find_element(By.ID, "mosaic-provider-jobcards"))
-        time.sleep(random.uniform(3, 6))
-        scrape_job_cards(driver.find_elements(By.CSS_SELECTOR, "li"))
-        # if get_next_page() is None:
-        #     break
-        # get_next_page().click()
-        # time.sleep(random.uniform(7, 12))  # Introduced higher floor for "things aren't loading" (rate-limiting?)
-        break
+        scrape_job_cards(driver.find_elements(By.CSS_SELECTOR, "a[data-jk]"))
+        next_page = get_next_page()
+        if next_page is None:
+            break
+        next_page.click()
 
 
 def scrape_job_cards(list_of_elements):
     for element in list_of_elements:
+        listing_id = element.get_attribute("data-jk")
+        link = "https://www.indeed.com/viewjob?jk=" + listing_id
+        title = element.find_element(By.ID, f"jobTitle-{listing_id}").get_attribute("title")
+        element = driver.find_element(By.XPATH, f".//div[contains(@class, 'job_{listing_id}')]")
+        company = element.find_element(By.CSS_SELECTOR, "span[data-testid='company-name']").text
+        location = element.find_element(By.CSS_SELECTOR, "div[data-testid='text-location']").text
+        compensation = None
+        # Compensation isn't always shown & the message that it's not there is under a different & dynamic class:
         try:
-            listing_id = element.find_element(By.CSS_SELECTOR, "a[data-jk]").get_attribute("data-jk")
-            link = "https://www.indeed.com/viewjob?jk=" + listing_id
-            title = element.find_element(By.CSS_SELECTOR, "span[title]").get_attribute("title")
-            company = element.find_element(By.CSS_SELECTOR, "span[data-testid='company-name']").text
-            location = element.find_element(By.CSS_SELECTOR, "div[data-testid='text-location']").text
-            compensation = element.find_element(By.CSS_SELECTOR, "div[class='salary-snippet-container']").text
-            time_since_post = element.find_element(By.CSS_SELECTOR, "span[data-testid='myJobsStateDate']").text
-            scraped_job_listings[listing_id] = {
-                'link': link,
-                'title': title,
-                'company': company,
-                'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'time_since_post': time_since_post,
-                'location': location,
-                'compensation': compensation
-            }
+            compensation = element.find_element(
+                By.XPATH, ".//div[contains(@class, 'salary-snippet-container')]").text
         except NoSuchElementException:
-            continue
+            pass
+        time_since_post = element.find_element(By.CSS_SELECTOR, "span[data-testid='myJobsStateDate']").text
+        scraped_job_listings[listing_id] = {
+            'link': link,
+            'source': "Indeed",
+            'title': title,
+            'company': company,
+            'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'time_since_post': time_since_post,
+            'location': location,
+            'compensation': compensation
+        }
 
 
 def generate_filepath():
@@ -133,6 +151,9 @@ def generate_filepath():
 
 
 def input_search_keywords(keyword, location):
+    # FIXME: why does this break in headless mode but not in non-headless?
+    # FIXME: you can take screenshots in headless mode, would be a great insight
+    # FIXME: seems to have the same issue running minimized, maybe needs actions to move to the element?
     keyword_box = wait.until(
         ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'text-input-what')]")))
     # The timers after an element has been found are necessary as otherwise the search boxes are cleared out somehow:
@@ -162,6 +183,8 @@ options = Options()
 driver = webdriver.Chrome(options=options)
 driver.maximize_window()
 driver.get('https://www.indeed.com')
-wait = WebDriverWait(driver, 10)
+wait = WebDriverWait(driver, 15)
+actions = ActionChains(driver)
 scraped_job_listings = {}
 scrape_search_terms()
+driver.quit()

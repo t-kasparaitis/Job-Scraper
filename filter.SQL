@@ -1,4 +1,4 @@
-select time_when_posted, link, title, compensation, location, company, listing_id, source
+select time_when_posted, link, title, company, compensation, location, listing_id, source 
 from job_listings jl
 where company not in (
 'HireMeFast LLC', -- Collecting resumes for junior jobs that don't exist
@@ -15,7 +15,10 @@ where company not in (
 'SimplyApply', -- Spammer, no profile 1-person LinkedIn "company", reposting JPMC jobs you could apply to directly
 'Opinion Focus Panel', -- Money for focus panels, probably a scam but also unrelated
 'AB Media Publishing, LLC', -- Money for focus panels, probably a scam but also unrelated (same description as above?)
-'IDR, Inc.' -- Uses "Jamie" virtual recruiter, makes you get recorded while talking to an AI for screening...
+'IDR, Inc.', -- Uses "Jamie" virtual recruiter, makes you get recorded while talking to an AI for screening...
+'Dexian Inc', -- Has 2 associated members on LinkedIn, doesn't feel legit
+'ManTech', -- Requires clearance, gov jobs
+'ARCTOS LLC' -- Requires clearance, gov jobs
 )
 AND NOT (
 title ILIKE '%senior%'
@@ -23,10 +26,21 @@ OR title ILIKE '%sr%'
 OR title ILIKE '%sr.%'
 OR title ILIKE '%principal%'
 OR title ILIKE '%lead%'
+OR title ILIKE '%vice president%'
 OR title ILIKE '%staff%'
 OR title ILIKE '%architect%'
+OR title ILIKE '%manager%'
+OR title ILIKE '%supervisor%'
 OR title ILIKE '%android%'
+OR title ILIKE '%ios%'
+OR title ILIKE '%mobile%'
 OR title ILIKE '%salesforce%'
+-- still deciding if I want to exclude the following:
+-- OR title ILIKE '%power bi%'
+-- OR title ILIKE '%peoplesoft%'
+-- OR title ILIKE '%mulesoft%'
+-- OR title ILIKE '%servicenow%'
+-- OR title ILIKE '%wordpress%'
 OR title ILIKE '%machine learning%'
 OR title ILIKE '%mainframe%'
 OR title ILIKE '%tableau%'
@@ -37,9 +51,21 @@ OR title ILIKE '%data%'
 OR title ILIKE '%systems%'
 OR title ILIKE '%solutions%'
 OR title ILIKE '%devops%'
+OR title ILIKE '%reliability%'
 OR title ILIKE '%security%'
+OR title ILIKE '%firmware%'
+OR title ILIKE '%embedded%'
+OR title ILIKE '%technician%'
+OR title ILIKE '%inspector%'
+OR title ILIKE '%support%'
 )
 order by time_when_posted desc
 
 -- Get table estimated size in an efficient/low-resource use kind of way:
--- SELECT reltuples AS estimate FROM pg_class WHERE relname = 'job_listings';
+--SELECT reltuples AS estimate FROM pg_class WHERE relname = 'job_listings';
+
+-- Get exact stats of dates + number of jobs posted
+--SELECT DATE(time_when_posted) AS date_only, COUNT(*) AS number_of_jobs_posted
+--FROM job_listings jl 
+--GROUP BY DATE(time_when_posted)
+--ORDER BY date_only;
