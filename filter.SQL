@@ -16,6 +16,7 @@ where company not in (
 'Opinion Focus Panel', -- Money for focus panels, probably a scam but also unrelated
 'AB Media Publishing, LLC', -- Money for focus panels, probably a scam but also unrelated (same description as above?)
 'IDR, Inc.', -- Uses "Jamie" virtual recruiter, makes you get recorded while talking to an AI for screening...
+'TalentBurst, Inc.', -- Uses "Jamie" virtual recruiter, makes you get recorded while talking to an AI for screening...
 'Dexian Inc', -- Has 2 associated members on LinkedIn, doesn't feel legit
 'ManTech', -- Requires clearance, gov jobs
 'ARCTOS LLC', -- Requires clearance, gov jobs
