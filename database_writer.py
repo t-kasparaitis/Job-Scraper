@@ -35,7 +35,7 @@ def write_to_database(filepath):
         db_dataframe = (spark.read.jdbc(url=connection_url, table="job_listings", properties=connection_properties)
                         .select("listing_id", "source"))
         dataframe = dataframe.join(db_dataframe, on=["listing_id", "source"], how="left_anti")
-        # FIXME: Had one weird run that failed to grab the company name for 1 page - should have some error logging for this
+        # FIXME: Had one weird run that failed to grab the company name for 1 page - should have some error logging
         # FIXME: Had a repeat of this, when I went back to the posting it was taken down - maybe that's the issue?
         # dataframe = dataframe.filter(dataframe.company.isNotNull())
         # It's entirely possible that a dataframe is empty/already scraped for specific or less popular search terms:
