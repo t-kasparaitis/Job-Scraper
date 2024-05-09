@@ -25,12 +25,10 @@ def write_to_database(filepath):
         "password": config['database']['password'],
         "driver": "org.postgresql.Driver"
     }
-    dataframe = (spark.read.option("encoding", "utf-8") \
-        .option("multiline", "true") \
-        .option("escapeQuote", "true") \
-        .csv(filepath, header=True))
-
-
+    dataframe = (spark.read.option("encoding", "utf-8")
+                 .option("multiline", "true")
+                 .option("escapeQuote", "true")
+                 .csv(filepath, header=True))
 
     # TODO: this is quite ugly, need to compartmentalize how different job sites get processed
     if dataframe.first()['source'] == "LinkedIn":
