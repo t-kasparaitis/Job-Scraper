@@ -176,25 +176,7 @@ def apply_job_filters(location):
     time.sleep(5)
 
 
-def read_config_file():
-    config_file_path = os.path.join(os.path.join(os.environ['USERPROFILE'], 'Desktop'), 'config.ini')
-    config = configparser.ConfigParser()
-    config.read(config_file_path)
-    return config
 
-
-def read_json_file():
-    with open('search_terms.json', 'r') as json_file:
-        return json.load(json_file)
-
-
-def generate_filepath():
-    output_dir = os.path.join(os.path.join(os.environ['USERPROFILE'], 'Desktop'), 'JobScraper')
-    os.makedirs(output_dir, exist_ok=True)
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M')
-    filename = f'LinkedIn_{timestamp}.csv'
-    filepath = os.path.join(output_dir, filename)
-    return filepath
 
 
 def sign_in():
@@ -247,12 +229,6 @@ def input_search_keywords(keyword, location):
     time.sleep(random.uniform(1, 2))
 
 
-def security_verification():
-    # There's 6 bull images we have to pick the one where the head is completely upright
-    # There's not an easy way to solve this without AI, maybe pixel analysis for which way head is pointing?
-    time.sleep(45)
-
-
 def scrape_search_terms():
     search_terms = read_json_file()
     for term in search_terms['LinkedIn_Search_Terms']:
@@ -267,14 +243,7 @@ def scrape_search_terms():
         write_to_csv(scraped_job_listings, csv_filepath)
 
 
-options = Options()
-options.add_argument('--headless')  # Disable headless mode if you are watching it run for troubleshooting/demo
-driver = webdriver.Chrome(options=options)
-driver.maximize_window()
-driver.get('https://www.linkedin.com')
-wait = WebDriverWait(driver, 10)
 sign_in()
 # TODO: look into best practices, this global scraped_job_listings might not be the right way
 scraped_job_listings = {}
 scrape_search_terms()
-driver.quit()

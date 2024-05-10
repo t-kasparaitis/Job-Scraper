@@ -119,12 +119,6 @@ def scrape_job_cards(list_of_elements):
         }
 
 
-def security_verification():
-    # Have to wait for cloudflare and then checkmark some box, which does seem to be targetable:
-    # <input type="checkbox">
-    time.sleep(45)
-
-
 def input_search_keywords(keyword, location):
     # FIXME: why does this break in headless mode but not in non-headless?
     # FIXME: you can take screenshots in headless mode, would be a great insight
@@ -153,12 +147,6 @@ def input_search_keywords(keyword, location):
     time.sleep(random.uniform(1, 2))
 
 
-options = Options()
-# options.add_argument('--headless')  # Disable headless mode if you are watching it run for troubleshooting/demo
-driver = webdriver.Chrome(options=options)
-driver.maximize_window()
-driver.get('https://www.indeed.com')
-wait = WebDriverWait(driver, 15)
 # try: # TODO: need to see what the title says when the scraper gets caught botting
 #     WebDriverWait(driver, 10).until(!ec.title_contains("Job Search | Indeed"))
 #     security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
@@ -166,7 +154,5 @@ wait = WebDriverWait(driver, 15)
 #     pass
 # # Wait to check that we are on the homepage:
 # wait.until(ec.title_contains("Job Search | Indeed"))
-actions = ActionChains(driver)
 scraped_job_listings = {}
 scrape_search_terms()
-driver.quit()
