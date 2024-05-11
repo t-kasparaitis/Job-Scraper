@@ -1,18 +1,14 @@
-import configparser
 import csv
-import os
 import time
 import random
-import json
 from datetime import datetime
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
+from Scraper import Scraper
 
 
 def is_scroll_at_bottom(scrollable_element):
@@ -176,12 +172,9 @@ def apply_job_filters(location):
     time.sleep(5)
 
 
-
-
-
 def sign_in():
     # TODO: Account for auto-sign in from Google etc., probably check for page title?
-    config = read_config_file()
+    config = scraper.read_config_file()
     username = config['credentials']['username']
     password = config['credentials']['password']
     username_box = wait.until(ec.element_to_be_clickable((By.ID, "session_key")))
@@ -192,7 +185,7 @@ def sign_in():
     sign_in_button.click()
     try:
         WebDriverWait(driver, 10).until(ec.title_contains("Security Verification | LinkedIn"))
-        security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
+        scraper.security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
     except TimeoutException:
         pass
     # Wait to check that we are on the homepage:
@@ -230,7 +223,7 @@ def input_search_keywords(keyword, location):
 
 
 def scrape_search_terms():
-    search_terms = read_json_file()
+    search_terms = scraper.read_json_file()
     for term in search_terms['LinkedIn_Search_Terms']:
         global scraped_job_listings
         scraped_job_listings = {}
@@ -239,10 +232,13 @@ def scrape_search_terms():
         navigate_to_jobs()
         input_search_keywords(keyword, location)
         scrape_job_pages(location)
-        csv_filepath = generate_filepath()
+        csv_filepath = scraper.generate_filepath()
         write_to_csv(scraped_job_listings, csv_filepath)
 
 
+scraper = Scraper(source="LinkedIn", site_url="https://www.linkedin.com")
+wait = scraper.wait
+driver = scraper.driver
 sign_in()
 # TODO: look into best practices, this global scraped_job_listings might not be the right way
 scraped_job_listings = {}

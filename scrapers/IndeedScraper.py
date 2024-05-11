@@ -1,16 +1,12 @@
 import time
 import random
-import json
 from datetime import datetime
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.action_chains import ActionChains
+from Scraper import Scraper
 
 
 def get_next_page():
@@ -33,13 +29,8 @@ def get_next_page():
     return None
 
 
-def read_json_file():
-    with open('search_terms.json', 'r') as json_file:
-        return json.load(json_file)
-
-
 def scrape_search_terms():
-    search_terms = read_json_file()
+    search_terms = scraper.read_json_file()
     for term in search_terms['Indeed_Search_Terms']:
         global scraped_job_listings
         scraped_job_listings = {}
@@ -49,8 +40,8 @@ def scrape_search_terms():
         try:
             apply_job_filters(location)
             scrape_job_pages()
-            csv_filepath = generate_filepath()
-            write_to_csv(scraped_job_listings, csv_filepath)
+            csv_filepath = scraper.generate_filepath()
+            scraper.write_to_csv(scraped_job_listings, csv_filepath)
         except TimeoutException:
             print("Unable to apply filters. This can be caused by no search results, in addition to a missing element.")
             continue
@@ -147,6 +138,7 @@ def input_search_keywords(keyword, location):
     time.sleep(random.uniform(1, 2))
 
 
+scraper = Scraper(source="Indeed", site_url="https://www.indeed.com", headless=False)
 # try: # TODO: need to see what the title says when the scraper gets caught botting
 #     WebDriverWait(driver, 10).until(!ec.title_contains("Job Search | Indeed"))
 #     security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
@@ -154,5 +146,8 @@ def input_search_keywords(keyword, location):
 #     pass
 # # Wait to check that we are on the homepage:
 # wait.until(ec.title_contains("Job Search | Indeed"))
+wait = scraper.wait  # TODO: start from here; this is how you can initialize things
+driver = scraper.driver
 scraped_job_listings = {}
 scrape_search_terms()
+scraper.close()

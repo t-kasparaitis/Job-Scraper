@@ -10,24 +10,35 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 class Scraper:
-    def __init__(self, source, site_url, wait_time=10, headless=True):
+    def __init__(self, source, site_url, **kwargs):
+        default_wait_time = 10
+        default_headless = True
+
+        self.wait_time = kwargs.get('wait_time', default_wait_time)
+        self.headless = kwargs.get('headless', default_headless)
+
         self.options = Options()
-        if headless:
+        if self.headless:
             self.options.add_argument('--headless')
         self.source = source
         self.driver = webdriver.Chrome(options=self.options)
         self.driver.maximize_window()
         self.driver.get(site_url)
-        self.wait = WebDriverWait(self.driver, wait_time)
+        self.wait = WebDriverWait(self.driver, self.wait_time)
 
-    def read_config_file(self):
-        config_file_path = os.path.join(os.path.join(os.environ['USERPROFILE'], 'Desktop'), 'config.ini')
+    @staticmethod
+    def read_config_file():
+        config_dir = os.path.join(os.path.dirname(__file__), '..', 'configurations')
+        config_file_path = os.path.join(config_dir, 'config.ini')
         config = configparser.ConfigParser()
         config.read(config_file_path)
         return config
 
+    @staticmethod
     def read_json_file():
-        with open('search_terms.json', 'r') as json_file:
+        config_dir = os.path.join(os.path.dirname(__file__), '..', 'configurations')
+        json_file_path = os.path.join(config_dir, 'search_terms.json')
+        with open(json_file_path, 'r') as json_file:
             return json.load(json_file)
 
     def write_to_csv(self, job_listings, filepath):

@@ -1,3 +1,3 @@
-from .scraper import Scraper
-from .indeed_scraper import IndeedScraper
-from .linkedin_scraper import LinkedInScraper
+from scrapers import Scraper
+from scrapers import IndeedScraper
+from scrapers import LinkedInScraper

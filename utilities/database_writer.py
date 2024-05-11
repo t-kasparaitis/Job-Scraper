@@ -7,7 +7,8 @@ from pyspark.sql.types import IntegerType
 
 
 def read_config_file():
-    config_file_path = os.path.join(os.path.join(os.environ['USERPROFILE'], 'Desktop'), 'config.ini')
+    config_dir = os.path.join(os.path.dirname(__file__), '..', 'configurations')
+    config_file_path = os.path.join(config_dir, 'config.ini')
     config = configparser.ConfigParser()
     config.read(config_file_path)
     return config
