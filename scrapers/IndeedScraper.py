@@ -9,6 +9,12 @@ from selenium.webdriver.common.keys import Keys
 from Scraper import Scraper
 
 
+class IndeedScraper(Scraper):
+    def __init__(self, **kwargs):
+        super().__init__('Indeed', 'https://www.indeed.com', **kwargs)
+        self.logger.info("IndeedScraper initialized")
+
+
 def get_next_page():
     for _ in range(20):
         try:
@@ -32,16 +38,16 @@ def get_next_page():
 def scrape_search_terms():
     search_terms = scraper.read_json_file()
     for term in search_terms['Indeed_Search_Terms']:
-        global scraped_job_listings
-        scraped_job_listings = {}
+        scraper.scraped_job_listings = {}
         keyword = term['keyword']
         location = term['location']
         input_search_keywords(keyword, location)
+        # TODO: rethink this logic, somehow got 4 csvs instead of 6:
         try:
             apply_job_filters(location)
             scrape_job_pages()
             csv_filepath = scraper.generate_filepath()
-            scraper.write_to_csv(scraped_job_listings, csv_filepath)
+            scraper.write_to_csv(scraper.scraped_job_listings, csv_filepath)
         except TimeoutException:
             print("Unable to apply filters. This can be caused by no search results, in addition to a missing element.")
             continue
@@ -98,9 +104,9 @@ def scrape_job_cards(list_of_elements):
         except NoSuchElementException:
             pass
         time_since_post = element.find_element(By.CSS_SELECTOR, "span[data-testid='myJobsStateDate']").text
-        scraped_job_listings[listing_id] = {
+        scraper.scraped_job_listings[listing_id] = {
             'link': link,
-            'source': "Indeed",
+            'source': scraper.source,
             'title': title,
             'company': company,
             'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -138,16 +144,23 @@ def input_search_keywords(keyword, location):
     time.sleep(random.uniform(1, 2))
 
 
-scraper = Scraper(source="Indeed", site_url="https://www.indeed.com", headless=False)
-# try: # TODO: need to see what the title says when the scraper gets caught botting
-#     WebDriverWait(driver, 10).until(!ec.title_contains("Job Search | Indeed"))
-#     security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
-# except TimeoutException:
-#     pass
-# # Wait to check that we are on the homepage:
-# wait.until(ec.title_contains("Job Search | Indeed"))
-wait = scraper.wait  # TODO: start from here; this is how you can initialize things
-driver = scraper.driver
-scraped_job_listings = {}
-scrape_search_terms()
-scraper.close()
+if __name__ == "__main__":
+    scraper = IndeedScraper(headless=False)
+    wait = scraper.wait  # TODO: start from here; this is how you can initialize things
+    driver = scraper.driver
+    # TODO: figure out why this doesn't work the same in headless mode, already tried headless=new:
+    # try: # TODO: need to see what the title says when the scraper gets caught botting
+    #     WebDriverWait(driver, 10).until(!ec.title_contains("Job Search | Indeed"))
+    #     security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
+    # except TimeoutException:
+    #     pass
+    # # Wait to check that we are on the homepage:
+    # wait.until(ec.title_contains("Job Search | Indeed"))
+    # Implement your scraping logic here
+    try:
+        # Placeholder for your scraping functions
+        scrape_search_terms()
+    except Exception as e:
+        scraper.logger.error(f"An error occurred: {e}")
+    finally:
+        scraper.close()

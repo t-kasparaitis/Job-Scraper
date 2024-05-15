@@ -15,9 +15,14 @@ where company not in (
 'SimplyApply', -- Spammer, no profile 1-person LinkedIn "company", reposting JPMC jobs you could apply to directly
 'Opinion Focus Panel', -- Money for focus panels, probably a scam but also unrelated
 'AB Media Publishing, LLC', -- Money for focus panels, probably a scam but also unrelated (same description as above?)
+-- Unrelated listing for data entry? has to be some sort of scam, all of these have the same description:
+'Opinion Focus Panel LLC', 
+'Webpratodos Marketing Digital',
+'Diverserec',
+'FONDS DE DOTATION FUTUR AU PRESENT',
 'IDR, Inc.', -- Uses "Jamie" virtual recruiter, makes you get recorded while talking to an AI for screening...
 'TalentBurst, Inc.', -- Uses "Jamie" virtual recruiter, makes you get recorded while talking to an AI for screening...
-'Dexian Inc', -- Has 2 associated members on LinkedIn, doesn't feel legit
+'Dexian Inc', -- Has 2 associated members on LinkedIn, doesn't feel legit; Dexian is legit but this is pretending to be Dexian?
 'ManTech', -- Requires clearance, gov jobs
 'ARCTOS LLC', -- Requires clearance, gov jobs
 'Northrop Grumman', -- Requires clearance, gov jobs

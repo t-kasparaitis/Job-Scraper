@@ -1,4 +1,3 @@
-import csv
 import time
 import random
 from datetime import datetime
@@ -36,7 +35,7 @@ def scrape_job_cards(list_of_elements):
                 By.XPATH, ".//div[contains(@class, 'artdeco-entity-lockup__caption')]").text
             compensation = element.find_element(
                 By.XPATH, ".//div[contains(@class, 'artdeco-entity-lockup__metadata')]").text
-            scraped_job_listings[listing_id] = {
+            scraper.scraped_job_listings[listing_id] = {
                 'link': link,
                 'source': "LinkedIn",
                 'title': title,
@@ -64,26 +63,6 @@ def get_next_page():
         return next_page_button
     except NoSuchElementException:
         return None
-
-
-def write_to_csv(job_listings, filepath):
-    with open(filepath, 'w', newline='', encoding='utf-8') as csv_file:
-        fieldnames = ['listing_id', 'source', 'title', 'company', 'link', 'time_when_scraped', 'time_since_post',
-                      'location', 'compensation']
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        writer.writeheader()
-        for listing_id, listing in job_listings.items():
-            writer.writerow({
-                'listing_id': listing_id,
-                'source': listing['source'],
-                'title': listing['title'],
-                'company': listing['company'],
-                'link': listing['link'],
-                'time_when_scraped': listing['time_when_scraped'],
-                'time_since_post': listing['time_since_post'],
-                'location': listing['location'],
-                'compensation': listing['compensation']
-            })
 
 
 def scrape_job_pages(location):
@@ -225,21 +204,18 @@ def input_search_keywords(keyword, location):
 def scrape_search_terms():
     search_terms = scraper.read_json_file()
     for term in search_terms['LinkedIn_Search_Terms']:
-        global scraped_job_listings
-        scraped_job_listings = {}
+        scraper.scraped_job_listings = {}
         keyword = term['keyword']
         location = term['location']
         navigate_to_jobs()
         input_search_keywords(keyword, location)
         scrape_job_pages(location)
         csv_filepath = scraper.generate_filepath()
-        write_to_csv(scraped_job_listings, csv_filepath)
+        scraper.write_to_csv(scraper.scraped_job_listings, csv_filepath)
 
 
-scraper = Scraper(source="LinkedIn", site_url="https://www.linkedin.com")
+scraper = Scraper(source="LinkedIn", site_url="https://www.linkedin.com", headless=False)
 wait = scraper.wait
 driver = scraper.driver
 sign_in()
-# TODO: look into best practices, this global scraped_job_listings might not be the right way
-scraped_job_listings = {}
 scrape_search_terms()

@@ -7,7 +7,7 @@ CREATE TABLE public.job_listings (
 	company text NOT NULL,
 	time_when_posted timestamp NOT NULL,
 	"source" text NOT NULL,
-	CONSTRAINT composite_key PRIMARY KEY (listing_id, source),
-    "location" text NULL,
-    compensation text NULL
+	"location" text NULL,
+	compensation text NULL,
+	CONSTRAINT composite_key PRIMARY KEY (listing_id, source)
 );
