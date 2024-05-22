@@ -66,7 +66,6 @@ def get_next_page():
 
 
 def scrape_job_pages(location):
-    reset_job_filters()
     apply_job_filters(location)
     time.sleep(random.uniform(3, 6))
     while True:
@@ -79,25 +78,16 @@ def scrape_job_pages(location):
         time.sleep(random.uniform(7, 12))  # Introduced higher floor for "things aren't loading" (rate-limiting?)
 
 
-def reset_job_filters():
-    # Clear out any filters if there are any from previous uses or being signed in to LinkedIn etc.:
-    try:
-        reset_applied_filters = WebDriverWait(driver, 5).until(ec.element_to_be_clickable(
-            (By.XPATH, "//button[@aria-label='Reset applied filters' and span[text()='Reset']]"))
-        )
-        reset_applied_filters.click()
-    except NoSuchElementException:
-        pass
-    except TimeoutException:
-        pass
-
-
 def apply_job_filters(location):
     # aria-label="Show all filters. Clicking this button displays all available filter options."
     all_filters_button = wait.until(ec.element_to_be_clickable((
         By.CSS_SELECTOR, "button.search-reusables__all-filters-pill-button")))
     all_filters_button.click()
     time.sleep(2)
+    # reset filters between runs to exclude behavior such as getting hybrid/on-site along with remote roles:
+    reset_applied_filters = wait.until(ec.element_to_be_clickable((
+        By.XPATH, "//button[contains(@class, 'artdeco-button') and contains(., 'Reset')]")))
+    reset_applied_filters.click()
     # Job cards don't show how long ago something was posted on the card, unless sorted by most recent:
     most_recent_filter = wait.until(ec.element_to_be_clickable((By.XPATH, "//span[text()='Most recent']")))
     most_recent_filter.click()
@@ -156,11 +146,11 @@ def sign_in():
     config = scraper.read_config_file()
     username = config['credentials']['username']
     password = config['credentials']['password']
-    username_box = wait.until(ec.element_to_be_clickable((By.ID, "session_key")))
+    username_box = wait.until(ec.element_to_be_clickable((By.ID, "username")))
     username_box.send_keys(username)
-    username_box = wait.until(ec.element_to_be_clickable((By.ID, "session_password")))
+    username_box = wait.until(ec.element_to_be_clickable((By.ID, "password")))
     username_box.send_keys(password)
-    sign_in_button = wait.until(ec.element_to_be_clickable((By.XPATH, "//button[@data-id='sign-in-form__submit-btn']")))
+    sign_in_button = wait.until(ec.element_to_be_clickable((By.XPATH, "//button[@aria-label='Sign in']")))
     sign_in_button.click()
     try:
         WebDriverWait(driver, 10).until(ec.title_contains("Security Verification | LinkedIn"))
@@ -197,7 +187,7 @@ def input_search_keywords(keyword, location):
         ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'jobs-search-box-location')]")))
     location_box.send_keys(location)
     time.sleep(random.uniform(1, 2))
-    keyword_box.send_keys(Keys.ENTER)
+    location_box.send_keys(Keys.ENTER)
     time.sleep(random.uniform(1, 2))
 
 
@@ -214,7 +204,7 @@ def scrape_search_terms():
         scraper.write_to_csv(scraper.scraped_job_listings, csv_filepath)
 
 
-scraper = Scraper(source="LinkedIn", site_url="https://www.linkedin.com", headless=False)
+scraper = Scraper(source="LinkedIn", site_url="https://www.linkedin.com/login", headless=False)
 wait = scraper.wait
 driver = scraper.driver
 sign_in()

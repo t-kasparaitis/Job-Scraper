@@ -81,7 +81,11 @@ OR title ILIKE '%inspector%'
 OR title ILIKE '%specialist%'
 OR title ILIKE '%support%'
 OR title ILIKE '%coordinator%'
-)
+) 
+-- Quick search for junior positions when I'm low on time:
+--and (title ilike '%junior%' 
+--or title ilike '%jr%'
+--or title ilike '%jr.%')
 order by time_when_posted desc
 
 -- Get table estimated size in an efficient/low-resource use kind of way:
@@ -110,3 +114,38 @@ order by time_when_posted desc
 --GROUP BY EXTRACT(YEAR FROM time_when_posted)
 --ORDER BY year;
 
+-- Get all roles on my database:
+--SELECT 
+--    r.rolname, 
+--    ARRAY(
+--        SELECT b.rolname
+--        FROM pg_catalog.pg_auth_members m
+--        JOIN pg_catalog.pg_roles b ON (m.roleid = b.oid)
+--        WHERE m.member = r.oid
+--    ) as memberof
+--FROM pg_catalog.pg_roles r
+--WHERE r.rolname NOT IN (
+--    'pg_signal_backend',
+--    'rds_iam',
+--    'rds_replication',
+--    'rds_superuser',
+--    'rdsadmin',
+--    'rdsrepladmin',
+--    'pg_checkpoint',
+--    'pg_create_subscription',
+--    'pg_database_owner',
+--    'pg_execute_server_program',
+--    'pg_monitor',
+--    'pg_read_all_data',
+--    'pg_read_all_settings',
+--    'pg_read_all_stats',
+--    'pg_read_server_files',
+--    'pg_stat_scan_tables',
+--    'pg_use_reserved_connections',
+--    'pg_write_all_data',
+--    'pg_write_server_files',
+--    'rds_ad',
+--    'rds_password',
+--    'rdstopmgr'
+--)
+--ORDER BY 1;

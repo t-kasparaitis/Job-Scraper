@@ -7,12 +7,19 @@ from selenium.common.exceptions import NoSuchElementException, StaleElementRefer
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from Scraper import Scraper
+from fake_useragent import UserAgent
 
 
 class IndeedScraper(Scraper):
     def __init__(self, **kwargs):
         super().__init__('Indeed', 'https://www.indeed.com', **kwargs)
         self.logger.info("IndeedScraper initialized")
+
+    @staticmethod
+    def security_verification():
+        time.sleep(90)  # Cloudflare keeps looping asking for a box to be checked, upping time for testing
+        # Verifying you are human. This may take a few seconds.
+        # <input type="checkbox">
 
 
 def get_next_page():
@@ -142,10 +149,16 @@ def input_search_keywords(keyword, location):
     time.sleep(random.uniform(1, 2))
     search_button.click()
     time.sleep(random.uniform(1, 2))
+    try:
+        wait.until(ec.title_contains("Just a moment..."))
+        scraper.security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
+    except TimeoutException:
+        pass
 
 
 if __name__ == "__main__":
-    scraper = IndeedScraper(headless=False)
+    ua = UserAgent(os='windows', browsers='chrome', platforms='pc')
+    scraper = IndeedScraper(headless=False, user_agent=ua.random)
     wait = scraper.wait  # TODO: start from here; this is how you can initialize things
     driver = scraper.driver
     # TODO: figure out why this doesn't work the same in headless mode, already tried headless=new:

@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 class Scraper:
-    LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+    LOG_DIR = os.path.join(os.path.dirname(__file__), '..', 'logs')
 
     def __init__(self, source, site_url, **kwargs):
         default_wait_time = 10
@@ -21,6 +21,10 @@ class Scraper:
         self.options = Options()
         if self.headless:
             self.options.add_argument('--headless=new')
+        self.user_agent = kwargs.get('user_agent')
+        user_agent = kwargs.get('user_agent')
+        if user_agent:
+            self.options.add_argument(f'--user-agent={user_agent}')
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
