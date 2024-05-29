@@ -25,12 +25,7 @@ class Scraper:
         user_agent = kwargs.get('user_agent')
         if user_agent:
             self.options.add_argument(f'--user-agent={user_agent}')
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        file_handler = logging.FileHandler('scraper.log')
-        file_handler.setFormatter(formatter)
-        self.logger.addHandler(file_handler)
+        self.logger = self.get_logger()
         self.scraped_job_listings = {}
         self.source = source
         self.driver = webdriver.Chrome(options=self.options)
@@ -49,7 +44,8 @@ class Scraper:
         if logger.hasHandlers():
             logger.handlers.clear()
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        file_handler = logging.FileHandler(f'{cls.__name__.lower()}.log')
+        log_file_path = os.path.join(cls.LOG_DIR, f'{cls.__name__.lower()}.log')
+        file_handler = logging.FileHandler(log_file_path)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
         return logger

@@ -13,7 +13,7 @@ from fake_useragent import UserAgent
 class IndeedScraper(Scraper):
     def __init__(self, **kwargs):
         super().__init__('Indeed', 'https://www.indeed.com', **kwargs)
-        self.logger.info("IndeedScraper initialized")
+        self.logger.info(f"{self.__class__.__name__} initialized")
 
     @staticmethod
     def security_verification():
@@ -49,7 +49,6 @@ def scrape_search_terms():
         keyword = term['keyword']
         location = term['location']
         input_search_keywords(keyword, location)
-        # TODO: rethink this logic, somehow got 4 csvs instead of 6:
         try:
             apply_job_filters(location)
             scrape_job_pages()
@@ -161,17 +160,7 @@ if __name__ == "__main__":
     scraper = IndeedScraper(headless=False, user_agent=ua.random)
     wait = scraper.wait  # TODO: start from here; this is how you can initialize things
     driver = scraper.driver
-    # TODO: figure out why this doesn't work the same in headless mode, already tried headless=new:
-    # try: # TODO: need to see what the title says when the scraper gets caught botting
-    #     WebDriverWait(driver, 10).until(!ec.title_contains("Job Search | Indeed"))
-    #     security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
-    # except TimeoutException:
-    #     pass
-    # # Wait to check that we are on the homepage:
-    # wait.until(ec.title_contains("Job Search | Indeed"))
-    # Implement your scraping logic here
     try:
-        # Placeholder for your scraping functions
         scrape_search_terms()
     except Exception as e:
         scraper.logger.error(f"An error occurred: {e}")

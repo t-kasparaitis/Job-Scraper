@@ -10,6 +10,12 @@ from selenium.webdriver.common.keys import Keys
 from Scraper import Scraper
 
 
+class LinkedIn(Scraper):
+    def __init__(self, **kwargs):
+        super().__init__('LinkedIn', 'https://www.linkedin.com/login', **kwargs)
+        self.logger.info(f"{self.__class__.__name__} initialized")
+
+
 def is_scroll_at_bottom(scrollable_element):
     return driver.execute_script("return arguments[0].scrollTop == "
                                  "(arguments[0].scrollHeight - arguments[0].offsetHeight);", scrollable_element)
@@ -204,8 +210,14 @@ def scrape_search_terms():
         scraper.write_to_csv(scraper.scraped_job_listings, csv_filepath)
 
 
-scraper = Scraper(source="LinkedIn", site_url="https://www.linkedin.com/login", headless=False)
-wait = scraper.wait
-driver = scraper.driver
-sign_in()
-scrape_search_terms()
+if __name__ == "__main__":
+    scraper = LinkedIn(headless=False)
+    wait = scraper.wait
+    driver = scraper.driver
+    try:
+        sign_in()
+        scrape_search_terms()
+    except Exception as e:
+        scraper.logger.error(f"An error occurred: {e}")
+    finally:
+        scraper.close()

@@ -1,13 +1,20 @@
 select time_when_posted, link, title, company, compensation, location, source, listing_id
 from job_listings jl
 where company not in (
-'HireMeFast LLC', -- Collecting resumes for junior jobs that don't exist
+-- Collecting resumes for (junior) jobs that don't exist:
+'Gainwell Technologies',
+'HireMeFast LLC', 
+'Phoenix Recruitment',
+'Team Remotely Inc',
+'Patterned Learning Career',
+'RemoteWorker US', -- Too much stupid spam, including survey takers...
+'RemoteWorker UK', -- not for us market
+'TransPerfect', -- some weird in-car audio collection?
+'DolphinsElite', -- Paid subscription to apply to jobs that pay 30-40k?!
+'Canonical', -- The company developing Ubuntu, crazy reqs & low pay
+'SynergisticIT', -- Weird youtube links in the job posting, seems to be preying on juniors
 'DataAnnotation', -- Jobs training AI to code
 'Talentify.io', -- Have to interview with an AI, mostly just data training/collection?
-'Phoenix Recruitment', -- Collecting resumes for junior jobs that don't exist
-'Team Remotely Inc', -- Collecting resumes for junior jobs that don't exist
-'Patterned Learning Career', -- Collecting resumes for junior jobs that don't exist
-'SynergisticIT', -- Weird youtube links in the job posting, seems to be preying on juniors
 'Recruiter.com', -- Some sort of scam "Check Your Email Inbox Immediately After Applying For Next Steps"
 'Providence Health & Services', -- Recruiting for medical coder, can refine sql later to make sure I don't exclude real dev jobs
 'Actalent', -- Seems to just spam food QA jobs for Columbus, OH which aren't related to tech
@@ -81,7 +88,9 @@ OR title ILIKE '%inspector%'
 OR title ILIKE '%specialist%'
 OR title ILIKE '%support%'
 OR title ILIKE '%coordinator%'
-) 
+)
+and ("location" ilike '%columbus%' or 
+"location" ilike '%remote%')
 -- Quick search for junior positions when I'm low on time:
 --and (title ilike '%junior%' 
 --or title ilike '%jr%'
