@@ -1,18 +1,19 @@
-import configparser
-import csv
-import os
 import time
 import random
-import json
 from datetime import datetime
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
+from Scraper import Scraper
+
+
+class LinkedIn(Scraper):
+    def __init__(self, **kwargs):
+        super().__init__('LinkedIn', 'https://www.linkedin.com/login', **kwargs)
+        self.logger.info(f"{self.__class__.__name__} initialized")
 
 
 def is_scroll_at_bottom(scrollable_element):
@@ -40,13 +41,12 @@ def scrape_job_cards(list_of_elements):
                 By.XPATH, ".//div[contains(@class, 'artdeco-entity-lockup__caption')]").text
             compensation = element.find_element(
                 By.XPATH, ".//div[contains(@class, 'artdeco-entity-lockup__metadata')]").text
-            scraped_job_listings[listing_id] = {
+            scraper.scraped_job_listings[listing_id] = {
                 'link': link,
                 'source': "LinkedIn",
                 'title': title,
                 'company': company,
                 'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'time_since_post': element.find_element(By.CSS_SELECTOR, 'time').text,
                 'location': location,
                 'compensation': compensation
             }
@@ -70,28 +70,7 @@ def get_next_page():
         return None
 
 
-def write_to_csv(job_listings, filepath):
-    with open(filepath, 'w', newline='', encoding='utf-8') as csv_file:
-        fieldnames = ['listing_id', 'source', 'title', 'company', 'link', 'time_when_scraped', 'time_since_post',
-                      'location', 'compensation']
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        writer.writeheader()
-        for listing_id, listing in job_listings.items():
-            writer.writerow({
-                'listing_id': listing_id,
-                'source': listing['source'],
-                'title': listing['title'],
-                'company': listing['company'],
-                'link': listing['link'],
-                'time_when_scraped': listing['time_when_scraped'],
-                'time_since_post': listing['time_since_post'],
-                'location': listing['location'],
-                'compensation': listing['compensation']
-            })
-
-
 def scrape_job_pages(location):
-    reset_job_filters()
     apply_job_filters(location)
     time.sleep(random.uniform(3, 6))
     while True:
@@ -104,25 +83,16 @@ def scrape_job_pages(location):
         time.sleep(random.uniform(7, 12))  # Introduced higher floor for "things aren't loading" (rate-limiting?)
 
 
-def reset_job_filters():
-    # Clear out any filters if there are any from previous uses or being signed in to LinkedIn etc.:
-    try:
-        reset_applied_filters = WebDriverWait(driver, 5).until(ec.element_to_be_clickable(
-            (By.XPATH, "//button[@aria-label='Reset applied filters' and span[text()='Reset']]"))
-        )
-        reset_applied_filters.click()
-    except NoSuchElementException:
-        pass
-    except TimeoutException:
-        pass
-
-
 def apply_job_filters(location):
     # aria-label="Show all filters. Clicking this button displays all available filter options."
     all_filters_button = wait.until(ec.element_to_be_clickable((
         By.CSS_SELECTOR, "button.search-reusables__all-filters-pill-button")))
     all_filters_button.click()
     time.sleep(2)
+    # reset filters between runs to exclude behavior such as getting hybrid/on-site along with remote roles:
+    reset_applied_filters = wait.until(ec.element_to_be_clickable((
+        By.XPATH, "//button[contains(@class, 'artdeco-button') and contains(., 'Reset')]")))
+    reset_applied_filters.click()
     # Job cards don't show how long ago something was posted on the card, unless sorted by most recent:
     most_recent_filter = wait.until(ec.element_to_be_clickable((By.XPATH, "//span[text()='Most recent']")))
     most_recent_filter.click()
@@ -176,41 +146,20 @@ def apply_job_filters(location):
     time.sleep(5)
 
 
-def read_config_file():
-    config_file_path = os.path.join(os.path.join(os.environ['USERPROFILE'], 'Desktop'), 'config.ini')
-    config = configparser.ConfigParser()
-    config.read(config_file_path)
-    return config
-
-
-def read_json_file():
-    with open('search_terms.json', 'r') as json_file:
-        return json.load(json_file)
-
-
-def generate_filepath():
-    output_dir = os.path.join(os.path.join(os.environ['USERPROFILE'], 'Desktop'), 'JobScraper')
-    os.makedirs(output_dir, exist_ok=True)
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M')
-    filename = f'LinkedIn_{timestamp}.csv'
-    filepath = os.path.join(output_dir, filename)
-    return filepath
-
-
 def sign_in():
     # TODO: Account for auto-sign in from Google etc., probably check for page title?
-    config = read_config_file()
-    username = config['credentials']['username']
-    password = config['credentials']['password']
-    username_box = wait.until(ec.element_to_be_clickable((By.ID, "session_key")))
+    config = scraper.read_config_file()
+    username = config['linkedin_credentials']['username']
+    password = config['linkedin_credentials']['password']
+    username_box = wait.until(ec.element_to_be_clickable((By.ID, "username")))
     username_box.send_keys(username)
-    username_box = wait.until(ec.element_to_be_clickable((By.ID, "session_password")))
+    username_box = wait.until(ec.element_to_be_clickable((By.ID, "password")))
     username_box.send_keys(password)
-    sign_in_button = wait.until(ec.element_to_be_clickable((By.XPATH, "//button[@data-id='sign-in-form__submit-btn']")))
+    sign_in_button = wait.until(ec.element_to_be_clickable((By.XPATH, "//button[@aria-label='Sign in']")))
     sign_in_button.click()
     try:
         WebDriverWait(driver, 10).until(ec.title_contains("Security Verification | LinkedIn"))
-        security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
+        scraper.security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
     except TimeoutException:
         pass
     # Wait to check that we are on the homepage:
@@ -243,38 +192,31 @@ def input_search_keywords(keyword, location):
         ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'jobs-search-box-location')]")))
     location_box.send_keys(location)
     time.sleep(random.uniform(1, 2))
-    keyword_box.send_keys(Keys.ENTER)
+    location_box.send_keys(Keys.ENTER)
     time.sleep(random.uniform(1, 2))
 
 
-def security_verification():
-    # There's 6 bull images we have to pick the one where the head is completely upright
-    # There's not an easy way to solve this without AI, maybe pixel analysis for which way head is pointing?
-    time.sleep(45)
-
-
 def scrape_search_terms():
-    search_terms = read_json_file()
+    search_terms = scraper.read_json_file()
     for term in search_terms['LinkedIn_Search_Terms']:
-        global scraped_job_listings
-        scraped_job_listings = {}
+        scraper.scraped_job_listings = {}
         keyword = term['keyword']
         location = term['location']
         navigate_to_jobs()
         input_search_keywords(keyword, location)
         scrape_job_pages(location)
-        csv_filepath = generate_filepath()
-        write_to_csv(scraped_job_listings, csv_filepath)
+        csv_filepath = scraper.generate_filepath()
+        scraper.write_to_csv(scraper.scraped_job_listings, csv_filepath)
 
 
-options = Options()
-options.add_argument('--headless')  # Disable headless mode if you are watching it run for troubleshooting/demo
-driver = webdriver.Chrome(options=options)
-driver.maximize_window()
-driver.get('https://www.linkedin.com')
-wait = WebDriverWait(driver, 10)
-sign_in()
-# TODO: look into best practices, this global scraped_job_listings might not be the right way
-scraped_job_listings = {}
-scrape_search_terms()
-driver.quit()
+if __name__ == "__main__":
+    scraper = LinkedIn(headless=False)
+    wait = scraper.wait
+    driver = scraper.driver
+    try:
+        sign_in()
+        scrape_search_terms()
+    except Exception as e:
+        scraper.logger.error(f"An error occurred: {e}")
+    finally:
+        scraper.close()
