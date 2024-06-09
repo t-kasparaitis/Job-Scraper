@@ -1,18 +1,25 @@
-import csv
-import os
 import time
 import random
-import json
 from datetime import datetime
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.action_chains import ActionChains
+from Scraper import Scraper
+from fake_useragent import UserAgent
+
+
+class IndeedScraper(Scraper):
+    def __init__(self, **kwargs):
+        super().__init__('Indeed', 'https://www.indeed.com', **kwargs)
+        self.logger.info(f"{self.__class__.__name__} initialized")
+
+    @staticmethod
+    def security_verification():
+        time.sleep(90)  # Cloudflare keeps looping asking for a box to be checked, upping time for testing
+        # Verifying you are human. This may take a few seconds.
+        # <input type="checkbox">
 
 
 def get_next_page():
@@ -35,24 +42,18 @@ def get_next_page():
     return None
 
 
-def read_json_file():
-    with open('search_terms.json', 'r') as json_file:
-        return json.load(json_file)
-
-
 def scrape_search_terms():
-    search_terms = read_json_file()
+    search_terms = scraper.read_json_file()
     for term in search_terms['Indeed_Search_Terms']:
-        global scraped_job_listings
-        scraped_job_listings = {}
+        scraper.scraped_job_listings = {}
         keyword = term['keyword']
         location = term['location']
         input_search_keywords(keyword, location)
         try:
             apply_job_filters(location)
             scrape_job_pages()
-            csv_filepath = generate_filepath()
-            write_to_csv(scraped_job_listings, csv_filepath)
+            csv_filepath = scraper.generate_filepath()
+            scraper.write_to_csv(scraper.scraped_job_listings, csv_filepath)
         except TimeoutException:
             print("Unable to apply filters. This can be caused by no search results, in addition to a missing element.")
             continue
@@ -83,26 +84,6 @@ def apply_job_filters(location):
         time.sleep(3)
 
 
-def write_to_csv(job_listings, filepath):
-    with open(filepath, 'w', newline='', encoding='utf-8') as csv_file:
-        fieldnames = ['listing_id', 'source', 'title', 'company', 'link', 'time_when_scraped', 'time_since_post',
-                      'location', 'compensation']
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        writer.writeheader()
-        for listing_id, listing in job_listings.items():
-            writer.writerow({
-                'listing_id': listing_id,
-                'source': listing['source'],
-                'title': listing['title'],
-                'company': listing['company'],
-                'link': listing['link'],
-                'time_when_scraped': listing['time_when_scraped'],
-                'time_since_post': listing['time_since_post'],
-                'location': listing['location'],
-                'compensation': listing['compensation']
-            })
-
-
 def scrape_job_pages():
     while True:
         time.sleep(random.uniform(3, 6))
@@ -128,26 +109,15 @@ def scrape_job_cards(list_of_elements):
                 By.XPATH, ".//div[contains(@class, 'salary-snippet-container')]").text
         except NoSuchElementException:
             pass
-        time_since_post = element.find_element(By.CSS_SELECTOR, "span[data-testid='myJobsStateDate']").text
-        scraped_job_listings[listing_id] = {
+        scraper.scraped_job_listings[listing_id] = {
             'link': link,
-            'source': "Indeed",
+            'source': scraper.source,
             'title': title,
             'company': company,
             'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'time_since_post': time_since_post,
             'location': location,
             'compensation': compensation
         }
-
-
-def generate_filepath():
-    output_dir = os.path.join(os.path.join(os.environ['USERPROFILE'], 'Desktop'), 'JobScraper')
-    os.makedirs(output_dir, exist_ok=True)
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M')
-    filename = f'Indeed_{timestamp}.csv'
-    filepath = os.path.join(output_dir, filename)
-    return filepath
 
 
 def input_search_keywords(keyword, location):
@@ -176,15 +146,21 @@ def input_search_keywords(keyword, location):
     time.sleep(random.uniform(1, 2))
     search_button.click()
     time.sleep(random.uniform(1, 2))
+    try:
+        wait.until(ec.title_contains("Just a moment..."))
+        scraper.security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
+    except TimeoutException:
+        pass
 
 
-options = Options()
-# options.add_argument('--headless')  # Disable headless mode if you are watching it run for troubleshooting/demo
-driver = webdriver.Chrome(options=options)
-driver.maximize_window()
-driver.get('https://www.indeed.com')
-wait = WebDriverWait(driver, 15)
-actions = ActionChains(driver)
-scraped_job_listings = {}
-scrape_search_terms()
-driver.quit()
+if __name__ == "__main__":
+    ua = UserAgent(os='windows', browsers='chrome', platforms='pc')
+    scraper = IndeedScraper(headless=False, user_agent=ua.random)
+    wait = scraper.wait  # TODO: start from here; this is how you can initialize things
+    driver = scraper.driver
+    try:
+        scrape_search_terms()
+    except Exception as e:
+        scraper.logger.error(f"An error occurred: {e}")
+    finally:
+        scraper.close()

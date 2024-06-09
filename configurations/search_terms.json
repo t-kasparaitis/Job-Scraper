@@ -1,6 +1,14 @@
 {
   "LinkedIn_Search_Terms": [
     {
+      "keyword": "Junior Developer",
+      "location": "Remote"
+    },
+    {
+      "keyword": "Junior Developer",
+      "location": "Columbus, Ohio Metropolitan Area"
+    },
+    {
       "keyword": "Developer",
       "location": "Remote"
     },
@@ -27,6 +35,14 @@
   ],
     "Indeed_Search_Terms": [
     {
+      "keyword": "Junior Developer",
+      "location": "Remote"
+    },
+    {
+      "keyword": "Junior Developer",
+      "location": "Columbus, OH"
+    },
+    {
       "keyword": "Developer",
       "location": "Remote"
     },
@@ -49,6 +65,32 @@
     {
       "keyword": "QA",
       "location": "Columbus, OH"
+    }
+  ],
+  "BuiltIn_Search_Terms": [
+    {
+      "keyword": "Developer",
+      "location": "Remote"
+    },
+    {
+      "keyword": "Developer",
+      "location": "Columbus, OH, USA"
+    },
+    {
+      "keyword": "Software Engineer",
+      "location": "Remote"
+    },
+    {
+      "keyword": "Software Engineer",
+      "location": "Columbus, OH, USA"
+    },
+    {
+      "keyword": "QA",
+      "location": "Remote"
+    },
+    {
+      "keyword": "QA",
+      "location": "Columbus, OH, USA"
     }
   ]
 }
