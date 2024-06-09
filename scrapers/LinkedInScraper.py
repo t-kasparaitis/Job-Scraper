@@ -47,7 +47,6 @@ def scrape_job_cards(list_of_elements):
                 'title': title,
                 'company': company,
                 'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'time_since_post': element.find_element(By.CSS_SELECTOR, 'time').text,
                 'location': location,
                 'compensation': compensation
             }
@@ -150,8 +149,8 @@ def apply_job_filters(location):
 def sign_in():
     # TODO: Account for auto-sign in from Google etc., probably check for page title?
     config = scraper.read_config_file()
-    username = config['credentials']['username']
-    password = config['credentials']['password']
+    username = config['linkedin_credentials']['username']
+    password = config['linkedin_credentials']['password']
     username_box = wait.until(ec.element_to_be_clickable((By.ID, "username")))
     username_box.send_keys(username)
     username_box = wait.until(ec.element_to_be_clickable((By.ID, "password")))

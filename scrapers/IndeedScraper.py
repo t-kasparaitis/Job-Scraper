@@ -109,14 +109,12 @@ def scrape_job_cards(list_of_elements):
                 By.XPATH, ".//div[contains(@class, 'salary-snippet-container')]").text
         except NoSuchElementException:
             pass
-        time_since_post = element.find_element(By.CSS_SELECTOR, "span[data-testid='myJobsStateDate']").text
         scraper.scraped_job_listings[listing_id] = {
             'link': link,
             'source': scraper.source,
             'title': title,
             'company': company,
             'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'time_since_post': time_since_post,
             'location': location,
             'compensation': compensation
         }

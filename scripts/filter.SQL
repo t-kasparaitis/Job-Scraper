@@ -1,4 +1,4 @@
-select time_when_posted, link, title, company, compensation, location, source, listing_id
+select time_when_scraped, link, title, company, compensation, location, source, listing_id
 from job_listings jl
 where company not in (
 -- Collecting resumes for (junior) jobs that don't exist:
@@ -65,8 +65,9 @@ OR title ILIKE '%mulesoft%'
 OR title ILIKE '%servicenow%'
 OR title ILIKE '%ab initio%'
 OR title ILIKE '%wordpress%'
-OR title ~* '\yma\y'
+OR title ~* '\yml\y'
 OR title ~* '\yai\y'
+OR title ~* '\yrpa\y'
 OR title ILIKE '%machine learning%'
 OR title ILIKE '%mainframe%'
 OR title ILIKE '%tableau%'
@@ -95,32 +96,32 @@ and ("location" ilike '%columbus%' or
 --and (title ilike '%junior%' 
 --or title ilike '%jr%'
 --or title ilike '%jr.%')
-order by time_when_posted desc
+order by time_when_scraped desc
 
 -- Get table estimated size in an efficient/low-resource use kind of way:
 --SELECT reltuples AS estimate FROM pg_class WHERE relname = 'job_listings';
 
 -- Get jobs per day:
---SELECT DATE(time_when_posted) AS date_only,
---       TO_CHAR(time_when_posted, 'Day') AS day_of_week,
+--SELECT DATE(time_when_scraped) AS date_only,
+--       TO_CHAR(time_when_scraped, 'Day') AS day_of_week,
 --       COUNT(*) AS number_of_jobs_posted
 --FROM job_listings jl 
---GROUP BY DATE(time_when_posted), TO_CHAR(time_when_posted, 'Day')
+--GROUP BY DATE(time_when_scraped), TO_CHAR(time_when_scraped, 'Day')
 --ORDER BY date_only;
 
 -- Get jobs per week:
---SELECT EXTRACT(YEAR FROM time_when_posted) AS year,
---       EXTRACT(WEEK FROM time_when_posted) AS week,
+--SELECT EXTRACT(YEAR FROM time_when_scraped) AS year,
+--       EXTRACT(WEEK FROM time_when_scraped) AS week,
 --       COUNT(*) AS number_of_jobs_posted
 --FROM job_listings jl 
---GROUP BY EXTRACT(YEAR FROM time_when_posted), EXTRACT(WEEK FROM time_when_posted)
+--GROUP BY EXTRACT(YEAR FROM time_when_scraped), EXTRACT(WEEK FROM time_when_scraped)
 --ORDER BY year, week;
 
 -- Get jobs per year:
---SELECT EXTRACT(YEAR FROM time_when_posted) AS year,
+--SELECT EXTRACT(YEAR FROM time_when_scraped) AS year,
 --       COUNT(*) AS number_of_jobs_posted
 --FROM job_listings jl 
---GROUP BY EXTRACT(YEAR FROM time_when_posted)
+--GROUP BY EXTRACT(YEAR FROM time_when_scraped)
 --ORDER BY year;
 
 -- Get all roles on my database:

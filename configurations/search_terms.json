@@ -1,6 +1,14 @@
 {
   "LinkedIn_Search_Terms": [
     {
+      "keyword": "Junior Developer",
+      "location": "Remote"
+    },
+    {
+      "keyword": "Junior Developer",
+      "location": "Columbus, Ohio Metropolitan Area"
+    },
+    {
       "keyword": "Developer",
       "location": "Remote"
     },
@@ -26,6 +34,14 @@
     }
   ],
     "Indeed_Search_Terms": [
+    {
+      "keyword": "Junior Developer",
+      "location": "Remote"
+    },
+    {
+      "keyword": "Junior Developer",
+      "location": "Columbus, OH"
+    },
     {
       "keyword": "Developer",
       "location": "Remote"

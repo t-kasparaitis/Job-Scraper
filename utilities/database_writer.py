@@ -44,17 +44,6 @@ def write_to_database(filepath):
         if dataframe.isEmpty():
             print(f"The DataFrame is empty for file: {filepath}")
             return
-        num_col = regexp_extract(col("time_since_post"), r"(\d+)\s(\w+)", 1).cast(IntegerType()).alias("num_col")
-        unit_col = regexp_extract(col("time_since_post"), r"(\d+)\s(\w+)", 2).alias("unit_col")
-        dataframe = dataframe.withColumn("time_since_post", regexp_replace(dataframe["time_since_post"],
-                                                                           "Just now", "1 minute ago"))
-        seconds_col = (when(unit_col.contains("minute"), num_col * 60)
-                       .when(unit_col.contains("hour"), num_col * 60 * 60)
-                       .when(unit_col.contains("day"), num_col * 60 * 60 * 24))
-        time_when_posted_col = (from_unixtime(unix_timestamp(
-            col("time_when_scraped")) - seconds_col, "yyyy-MM-dd HH:mm:ss")
-                                .cast("timestamp").alias("time_when_posted"))
-        dataframe = dataframe.withColumn("time_when_posted", time_when_posted_col)
 
     if dataframe.first()['source'] == "Indeed":
         db_dataframe = (spark.read.jdbc(url=connection_url, table="job_listings", properties=connection_properties)
@@ -64,10 +53,8 @@ def write_to_database(filepath):
         if dataframe.isEmpty():
             print(f"The DataFrame is empty for file: {filepath}")
             return
-        time_when_posted_col = col('time_when_scraped').cast("timestamp").alias("time_when_posted")
-        dataframe = dataframe.withColumn("time_when_posted", time_when_posted_col)
     dataframe.select(
-        ["listing_id", "source", "title", "company", "link", "time_when_posted", "location", "compensation"]
+        ["listing_id", "source", "title", "company", "link", "time_when_scraped", "location", "compensation"]
     ).write.jdbc(url=connection_url, table="job_listings", mode="append", properties=connection_properties)
 
 

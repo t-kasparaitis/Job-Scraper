@@ -15,26 +15,6 @@ class BuiltInScraper(Scraper):
         self.logger.info(f"{self.__class__.__name__} initialized")
 
 
-# def get_next_page():
-#     for _ in range(20):
-#         try:
-#             time.sleep(.5)
-#             element = driver.find_element(By.XPATH, "//a[@aria-label='Next Page']")
-#             # Check if element's top & bottom are within the viewport:
-#             is_visible = driver.execute_script(
-#                 "var rect = arguments[0].getBoundingClientRect();"
-#                 "return (rect.top >= 0 && rect.bottom <= window.innerHeight);",
-#                 element
-#             )
-#             if is_visible:
-#                 return element
-#             driver.execute_script("window.scrollBy(0, 500);")
-#         except (NoSuchElementException, StaleElementReferenceException):
-#             driver.execute_script("window.scrollBy(0, 500);")
-#             continue
-#     return None
-
-
 def scrape_search_terms():
     search_terms = scraper.read_json_file()
     for term in search_terms['BuiltIn_Search_Terms']:
@@ -42,14 +22,39 @@ def scrape_search_terms():
         keyword = term['keyword']
         location = term['location']
         input_search_keywords(keyword, location)
-        try:
-            apply_job_filters(location)
-            scrape_job_pages()
-            csv_filepath = scraper.generate_filepath()
-            scraper.write_to_csv(scraper.scraped_job_listings, csv_filepath)
-        except TimeoutException:
-            print("Unable to apply filters. This can be caused by no search results, in addition to a missing element.")
-            continue
+        apply_job_filters(location)
+        scrape_job_pages()
+        csv_filepath = scraper.generate_filepath()
+        scraper.write_to_csv(scraper.scraped_job_listings, csv_filepath)
+
+
+def input_search_keywords(keyword, location):
+    keyword_box = wait.until(
+        ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'searchJobsInput')]")))
+    # # The timers after an element has been found are necessary as otherwise the search boxes are cleared out somehow:
+    # time.sleep(random.uniform(1, 2))
+    # keyword_box.click()
+    # keyword_box.send_keys(Keys.CONTROL + "a")
+    # keyword_box.send_keys(Keys.BACKSPACE)
+    keyword_box.send_keys(keyword)
+    # time.sleep(random.uniform(1, 2))
+    location_box = wait.until(
+        ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'locationDropdownInput')]")))
+    # time.sleep(random.uniform(1, 2))
+    location_box.click()
+    location_box.send_keys(Keys.CONTROL + "a")
+    location_box.send_keys(Keys.BACKSPACE)
+    # BuiltIn has a separate box for specifying remote/hybrid/in office. In addition to this, the location box can't
+    # take Remote as a location. For this site, we apply the remote filter later and use USA for a broad search.
+    if location == 'Remote':
+        location_box.send_keys("United States")
+    else:
+        location_box.send_keys(location)
+    # time.sleep(random.uniform(1, 2))
+    search_button = wait.until(ec.element_to_be_clickable((
+        By.XPATH, "//button[.//span[contains(text(), 'See Job Matches') or contains(text(), 'See Jobs')]]")))
+    time.sleep(3)
+    search_button.click()
 
 
 def apply_job_filters(location):
@@ -96,69 +101,57 @@ def apply_job_filters(location):
 def scrape_job_pages():
     while True:
         time.sleep(random.uniform(3, 6))
-        scrape_job_cards(driver.find_elements(By.CSS_SELECTOR, "a[data-jk]"))
+        scrape_job_cards(driver.find_elements(By.CSS_SELECTOR, "div[data-id='job-card']"))
         next_page = get_next_page()
         if next_page is None:
             break
         next_page.click()
 
 
-# def scrape_job_cards(list_of_elements):
-#     for element in list_of_elements:
-#         listing_id = element.get_attribute("data-jk")
-#         link = "https://www.indeed.com/viewjob?jk=" + listing_id
-#         title = element.find_element(By.ID, f"jobTitle-{listing_id}").get_attribute("title")
-#         element = driver.find_element(By.XPATH, f".//div[contains(@class, 'job_{listing_id}')]")
-#         company = element.find_element(By.CSS_SELECTOR, "span[data-testid='company-name']").text
-#         location = element.find_element(By.CSS_SELECTOR, "div[data-testid='text-location']").text
-#         compensation = None
-#         # Compensation isn't always shown & the message that it's not there is under a different & dynamic class:
-#         try:
-#             compensation = element.find_element(
-#                 By.XPATH, ".//div[contains(@class, 'salary-snippet-container')]").text
-#         except NoSuchElementException:
-#             pass
-#         time_since_post = element.find_element(By.CSS_SELECTOR, "span[data-testid='myJobsStateDate']").text
-#         scraper.scraped_job_listings[listing_id] = {
-#             'link': link,
-#             'source': scraper.source,
-#             'title': title,
-#             'company': company,
-#             'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-#             'time_since_post': time_since_post,
-#             'location': location,
-#             'compensation': compensation
-#         }
+def scrape_job_cards(list_of_elements):
+    for element in list_of_elements:
+        company_title_element = element.find_element(By.CSS_SELECTOR, "div[data-id='company-title']")
+        listing_id = company_title_element.get_attribute("data-builtin-track-job-id")
+        # The title element contains the title, but also has a href for the link:
+        title_element = element.find_element(By.CSS_SELECTOR, "h2 > a")
+        link = "https://builtin.com/" + title_element.get_attribute('href')
+        title = title_element.text
+        company = element.find_element(By.CSS_SELECTOR, "div[data-testid='company-title']").text
+        location = element.find_element(By.CSS_SELECTOR, "i.fa-location-dot + div > span").text
+        compensation = None
+        try:
+            compensation = element.find_element(By.CSS_SELECTOR, "i.fa-sack-dollar + span").text
+        except NoSuchElementException:
+            pass
+        scraper.scraped_job_listings[listing_id] = {
+            'link': link,
+            'source': scraper.source,
+            'title': title,
+            'company': company,
+            'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'location': location,
+            'compensation': compensation
+        }
 
 
-def input_search_keywords(keyword, location):
-    keyword_box = wait.until(
-        ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'searchJobsInput')]")))
-    # # The timers after an element has been found are necessary as otherwise the search boxes are cleared out somehow:
-    # time.sleep(random.uniform(1, 2))
-    # keyword_box.click()
-    # keyword_box.send_keys(Keys.CONTROL + "a")
-    # keyword_box.send_keys(Keys.BACKSPACE)
-    keyword_box.send_keys(keyword)
-    # time.sleep(random.uniform(1, 2))
-    location_box = wait.until(
-        ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'locationDropdownInput')]")))
-    # time.sleep(random.uniform(1, 2))
-    location_box.click()
-    location_box.send_keys(Keys.CONTROL + "a")
-    location_box.send_keys(Keys.BACKSPACE)
-    # BuiltIn has a separate box for specifying remote/hybrid/in office. In addition to this, the location box can't
-    # take Remote as a location. For this site, we apply the remote filter later and use USA for a broad search.
-    if location == 'Remote':
-        location_box.send_keys("United States")
-    else:
-        location_box.send_keys(location)
-    # time.sleep(random.uniform(1, 2))
-    search_button = wait.until(ec.element_to_be_clickable((
-        By.XPATH, "//button[normalize-space()='See Jobs']")))
-    # time.sleep(random.uniform(1, 2))
-    search_button.click()
-    # time.sleep(random.uniform(1, 2))
+def get_next_page():
+    for _ in range(20):
+        try:
+            time.sleep(.5)
+            element = driver.find_element(By.XPATH, "//a[@aria-label='Go to Next Page']")
+            # Check if element's top & bottom are within the viewport:
+            is_visible = driver.execute_script(
+                "var rect = arguments[0].getBoundingClientRect();"
+                "return (rect.top >= 0 && rect.bottom <= window.innerHeight);",
+                element
+            )
+            if is_visible:
+                return element
+            driver.execute_script("window.scrollBy(0, 500);")
+        except (NoSuchElementException, StaleElementReferenceException):
+            driver.execute_script("window.scrollBy(0, 500);")
+            continue
+    return None
 
 
 if __name__ == "__main__":
