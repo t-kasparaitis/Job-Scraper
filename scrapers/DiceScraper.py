@@ -8,16 +8,16 @@ from selenium.webdriver.common.keys import Keys
 from Scraper import Scraper
 
 
-class BuiltInScraper(Scraper):
+class DiceScraper(Scraper):
     def __init__(self, **kwargs):
-        super().__init__('BuiltIn', 'https://builtin.com/', **kwargs)
+        super().__init__('BuiltIn', 'https://www.dice.com/', **kwargs)
         self.logger.info(f"{self.__class__.__name__} initialized")
 
 
 def scrape_search_terms():
     search_terms = scraper.read_json_file()
-    total_terms = len(search_terms['BuiltIn_Search_Terms'])
-    for index, term in enumerate(search_terms['BuiltIn_Search_Terms']):
+    total_terms = len(search_terms['Dice_Search_Terms'])
+    for index, term in enumerate(search_terms['Dice_Search_Terms']):
         scraper.scraped_job_listings = {}
         keyword = term['keyword']
         location = term['location']
@@ -29,38 +29,28 @@ def scrape_search_terms():
         scraper.write_to_csv(scraper.scraped_job_listings, csv_filepath)
         # Go back to the main page to input search terms, unless it's the last term:
         if index < total_terms - 1:
-            driver.get("https://builtin.com")
+            driver.get("https://www.dice.com/")
             time.sleep(10)  # Allow some time to load the main page again
 
 
 def input_search_keywords(keyword, location):
-    keyword_box = wait.until(
-        ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'searchJobsInput')]")))
+    keyword_box = wait.until(ec.element_to_be_clickable((By.ID, "typeaheadInput")))
+    keyword_box.click()
     keyword_box.send_keys(keyword)
-    location_box = wait.until(
-        ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'locationDropdownInput')]")))
+    time.sleep(3)
+    location_box = wait.until(ec.element_to_be_clickable((By.ID, "google-location-search")))
     location_box.click()
     location_box.send_keys(Keys.CONTROL + "a")
     location_box.send_keys(Keys.BACKSPACE)
-    # BuiltIn has a separate box for specifying remote/hybrid/in office. In addition to this, the location box can't
-    # take Remote as a location. For this site, we apply the remote filter later and use USA for a broad search.
-    if location == 'Remote':
-        location_box.send_keys("United States")
-    else:
-        location_box.send_keys(location)
+    location_box.send_keys(location)
     time.sleep(3)
-    # Once the location is put in, you need to send down arrow & enter key to lock it in. Otherwise, switching context
-    # wipes out the entry and a default is used. For example, a specific location defaults back to United States.
-    location_box.send_keys(Keys.DOWN)
-    location_box.send_keys(Keys.ENTER)
-    search_button = wait.until(ec.element_to_be_clickable((
-        By.XPATH, "//button[.//span[contains(text(), 'See Job Matches') or contains(text(), 'See Jobs')]]")))
+    search_button = wait.until(ec.element_to_be_clickable((By.ID, "submitSearch-button")))
     time.sleep(3)
     search_button.click()
 
 
 def apply_job_filters(location):
-    time.sleep(3)
+    time.sleep(6)  # Dice.com seems a bit slower to go from search to results
     date_posted_button = wait.until(ec.element_to_be_clickable((By.ID, "postedDateDropdownButton")))
     date_posted_button.click()  # Open menu
     time.sleep(3)
@@ -171,7 +161,7 @@ def get_next_page():
 
 
 if __name__ == "__main__":
-    scraper = BuiltInScraper(headless=False)
+    scraper = DiceScraper(headless=False)
     wait = scraper.wait
     driver = scraper.driver
     try:

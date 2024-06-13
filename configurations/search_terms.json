@@ -92,5 +92,39 @@
       "keyword": "QA",
       "location": "Columbus, OH, USA"
     }
+  ],
+  "Dice_Search_Terms": [
+    {
+      "keyword": "Junior Developer",
+      "location": "Remote"
+    },
+    {
+      "keyword": "Junior Developer",
+      "location": "Columbus, OH, USA"
+    },
+    {
+      "keyword": "Developer",
+      "location": "Remote"
+    },
+    {
+      "keyword": "Developer",
+      "location": "Columbus, OH, USA"
+    },
+    {
+      "keyword": "Software Engineer",
+      "location": "Remote"
+    },
+    {
+      "keyword": "Software Engineer",
+      "location": "Columbus, OH, USA"
+    },
+    {
+      "keyword": "QA",
+      "location": "Remote"
+    },
+    {
+      "keyword": "QA",
+      "location": "Columbus, OH, USA"
+    }
   ]
 }

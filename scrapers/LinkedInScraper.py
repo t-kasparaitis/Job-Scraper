@@ -10,7 +10,7 @@ from selenium.webdriver.common.keys import Keys
 from Scraper import Scraper
 
 
-class LinkedIn(Scraper):
+class LinkedInScraper(Scraper):
     def __init__(self, **kwargs):
         super().__init__('LinkedIn', 'https://www.linkedin.com/login', **kwargs)
         self.logger.info(f"{self.__class__.__name__} initialized")
@@ -203,6 +203,7 @@ def scrape_search_terms():
         keyword = term['keyword']
         location = term['location']
         navigate_to_jobs()
+        scraper.logger.info(f"Starting search for {keyword} in {location}")
         input_search_keywords(keyword, location)
         scrape_job_pages(location)
         csv_filepath = scraper.generate_filepath()
@@ -210,7 +211,7 @@ def scrape_search_terms():
 
 
 if __name__ == "__main__":
-    scraper = LinkedIn(headless=False)
+    scraper = LinkedInScraper(headless=False)
     wait = scraper.wait
     driver = scraper.driver
     try:

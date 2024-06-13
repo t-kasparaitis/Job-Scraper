@@ -2,8 +2,7 @@ import configparser
 import os
 import shutil
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, regexp_extract, when, from_unixtime, unix_timestamp, regexp_replace
-from pyspark.sql.types import IntegerType
+from pyspark.sql.functions import col
 
 
 def read_config_file():
@@ -31,31 +30,26 @@ def write_to_database(filepath):
                  .option("escapeQuote", "true")
                  .csv(filepath, header=True))
 
-    # TODO: this is quite ugly, need to compartmentalize how different job sites get processed
     if dataframe.first()['source'] == "LinkedIn":
         dataframe = dataframe.filter(~col('listing_id').rlike('[^0-9]'))
-        db_dataframe = (spark.read.jdbc(url=connection_url, table="job_listings", properties=connection_properties)
-                        .select("listing_id", "source"))
-        dataframe = dataframe.join(db_dataframe, on=["listing_id", "source"], how="left_anti")
-        # FIXME: Had one weird run that failed to grab the company name for 1 page - should have some error logging
-        # FIXME: Had a repeat of this, when I went back to the posting it was taken down - maybe that's the issue?
-        # dataframe = dataframe.filter(dataframe.company.isNotNull())
-        # It's entirely possible that a dataframe is empty/already scraped for specific or less popular search terms:
-        if dataframe.isEmpty():
-            print(f"The DataFrame is empty for file: {filepath}")
-            return
 
-    if dataframe.first()['source'] == "Indeed":
-        db_dataframe = (spark.read.jdbc(url=connection_url, table="job_listings", properties=connection_properties)
-                        .select("listing_id", "source"))
-        dataframe = dataframe.join(db_dataframe, on=["listing_id", "source"], how="left_anti")
-        # It's entirely possible that a dataframe is empty/already scraped for specific or less popular search terms:
-        if dataframe.isEmpty():
-            print(f"The DataFrame is empty for file: {filepath}")
-            return
-    dataframe.select(
-        ["listing_id", "source", "title", "company", "link", "time_when_scraped", "location", "compensation"]
-    ).write.jdbc(url=connection_url, table="job_listings", mode="append", properties=connection_properties)
+    db_dataframe = (spark.read.jdbc(url=connection_url, table="job_listings", properties=connection_properties)
+                    .select("listing_id", "source"))
+    dataframe = dataframe.join(db_dataframe, on=["listing_id", "source"], how="left_anti")
+    # It's entirely possible that a dataframe is empty/already scraped for specific or less popular search terms:
+    if dataframe.isEmpty():
+        print(f"The DataFrame is empty for file: {filepath}")
+        return
+    (dataframe.select(
+        ["listing_id",
+         "source",
+         "title",
+         "company",
+         "link",
+         col("time_when_scraped").cast("timestamp"),
+         "location",
+         "compensation"])
+     .write.jdbc(url=connection_url, table="job_listings", mode="append", properties=connection_properties))
 
 
 def get_csv_files():

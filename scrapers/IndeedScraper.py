@@ -1,5 +1,6 @@
 import time
 import random
+import traceback
 from datetime import datetime
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -22,32 +23,13 @@ class IndeedScraper(Scraper):
         # <input type="checkbox">
 
 
-def get_next_page():
-    for _ in range(20):
-        try:
-            time.sleep(.5)
-            element = driver.find_element(By.XPATH, "//a[@aria-label='Next Page']")
-            # Check if element's top & bottom are within the viewport:
-            is_visible = driver.execute_script(
-                "var rect = arguments[0].getBoundingClientRect();"
-                "return (rect.top >= 0 && rect.bottom <= window.innerHeight);",
-                element
-            )
-            if is_visible:
-                return element
-            driver.execute_script("window.scrollBy(0, 500);")
-        except (NoSuchElementException, StaleElementReferenceException):
-            driver.execute_script("window.scrollBy(0, 500);")
-            continue
-    return None
-
-
 def scrape_search_terms():
     search_terms = scraper.read_json_file()
     for term in search_terms['Indeed_Search_Terms']:
         scraper.scraped_job_listings = {}
         keyword = term['keyword']
         location = term['location']
+        scraper.logger.info(f"Starting search for {keyword} in {location}")
         input_search_keywords(keyword, location)
         try:
             apply_job_filters(location)
@@ -57,6 +39,37 @@ def scrape_search_terms():
         except TimeoutException:
             print("Unable to apply filters. This can be caused by no search results, in addition to a missing element.")
             continue
+
+
+def input_search_keywords(keyword, location):
+    time.sleep(5)  # Gets around a Stale Element Exception that otherwise occurs when interacting with search box etc.
+    keyword_box = wait.until(
+        ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'text-input-what')]")))
+    # The timers after an element has been found are necessary as otherwise the search boxes are cleared out somehow:
+    time.sleep(random.uniform(1, 2))
+    keyword_box.click()
+    keyword_box.send_keys(Keys.CONTROL + "a")
+    keyword_box.send_keys(Keys.BACKSPACE)
+    keyword_box.send_keys(keyword)
+    time.sleep(random.uniform(1, 2))
+    location_box = wait.until(
+        ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'text-input-where')]")))
+    time.sleep(random.uniform(1, 2))
+    location_box.click()
+    location_box.send_keys(Keys.CONTROL + "a")
+    location_box.send_keys(Keys.BACKSPACE)
+    location_box.send_keys(location)
+    time.sleep(random.uniform(1, 2))
+    search_button = wait.until(ec.element_to_be_clickable((
+        By.XPATH, "//button[normalize-space()='Search']")))
+    time.sleep(random.uniform(1, 2))
+    search_button.click()
+    time.sleep(random.uniform(1, 2))
+    try:
+        wait.until(ec.title_contains("Just a moment..."))
+        scraper.security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
+    except TimeoutException:
+        pass
 
 
 def apply_job_filters(location):
@@ -120,37 +133,24 @@ def scrape_job_cards(list_of_elements):
         }
 
 
-def input_search_keywords(keyword, location):
-    # FIXME: why does this break in headless mode but not in non-headless?
-    # FIXME: you can take screenshots in headless mode, would be a great insight
-    # FIXME: seems to have the same issue running minimized, maybe needs actions to move to the element?
-    keyword_box = wait.until(
-        ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'text-input-what')]")))
-    # The timers after an element has been found are necessary as otherwise the search boxes are cleared out somehow:
-    time.sleep(random.uniform(1, 2))
-    keyword_box.click()
-    keyword_box.send_keys(Keys.CONTROL + "a")
-    keyword_box.send_keys(Keys.BACKSPACE)
-    keyword_box.send_keys(keyword)
-    time.sleep(random.uniform(1, 2))
-    location_box = wait.until(
-        ec.element_to_be_clickable((By.XPATH, "//input[contains(@id, 'text-input-where')]")))
-    time.sleep(random.uniform(1, 2))
-    location_box.click()
-    location_box.send_keys(Keys.CONTROL + "a")
-    location_box.send_keys(Keys.BACKSPACE)
-    location_box.send_keys(location)
-    time.sleep(random.uniform(1, 2))
-    search_button = wait.until(ec.element_to_be_clickable((
-        By.XPATH, "//button[normalize-space()='Search']")))
-    time.sleep(random.uniform(1, 2))
-    search_button.click()
-    time.sleep(random.uniform(1, 2))
-    try:
-        wait.until(ec.title_contains("Just a moment..."))
-        scraper.security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
-    except TimeoutException:
-        pass
+def get_next_page():
+    for _ in range(20):
+        try:
+            time.sleep(.5)
+            element = driver.find_element(By.XPATH, "//a[@aria-label='Next Page']")
+            # Check if element's top & bottom are within the viewport:
+            is_visible = driver.execute_script(
+                "var rect = arguments[0].getBoundingClientRect();"
+                "return (rect.top >= 0 && rect.bottom <= window.innerHeight);",
+                element
+            )
+            if is_visible:
+                return element
+            driver.execute_script("window.scrollBy(0, 500);")
+        except (NoSuchElementException, StaleElementReferenceException):
+            driver.execute_script("window.scrollBy(0, 500);")
+            continue
+    return None
 
 
 if __name__ == "__main__":
@@ -161,6 +161,7 @@ if __name__ == "__main__":
     try:
         scrape_search_terms()
     except Exception as e:
-        scraper.logger.error(f"An error occurred: {e}")
+        traceback_details = traceback.format_exc()
+        scraper.logger.error(f"An error occurred: {e}\nDetails: {traceback_details}")
     finally:
         scraper.close()

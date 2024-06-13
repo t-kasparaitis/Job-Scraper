@@ -44,7 +44,7 @@ class Scraper:
         if logger.hasHandlers():
             logger.handlers.clear()
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        log_file_path = os.path.join(cls.LOG_DIR, f'{cls.__name__.lower()}.log')
+        log_file_path = os.path.join(cls.LOG_DIR, f'{cls.__name__}.log')
         file_handler = logging.FileHandler(log_file_path)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -73,7 +73,6 @@ class Scraper:
                           'company',
                           'link',
                           'time_when_scraped',
-                          'time_since_post',
                           'location',
                           'compensation']
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
@@ -86,7 +85,6 @@ class Scraper:
                     'company': listing['company'],
                     'link': listing['link'],
                     'time_when_scraped': listing['time_when_scraped'],
-                    'time_since_post': listing['time_since_post'],
                     'location': listing['location'],
                     'compensation': listing['compensation']
                 })
