@@ -32,7 +32,6 @@ def scrape_job_cards(list_of_elements):
         try:
             listing_id = element.get_attribute("data-job-id")
             link = "https://www.linkedin.com/jobs/view/" + listing_id
-            # FIXME: getting some empty grabs that are currently caused by exception handler
             aria_label = element.find_element(By.CSS_SELECTOR, 'a.job-card-container__link[aria-label][tabindex="0"]')
             title = aria_label.get_attribute("aria-label")
             company = element.find_element(
@@ -117,8 +116,6 @@ def apply_job_filters(location):
                 driver.execute_script(f"arguments[0].scrollBy(0, {scroll_increment});",
                                       driver.find_element(By.CLASS_NAME, "artdeco-modal__content"))
     # Similarly, if you are looking for local hybrid, remote will show up unless you checkmark on-site/hybrid:
-    # TODO: make a function that takes a list of elements as a parameter, where it checks each one is found
-    # TODO: add distance slider using action chains
     else:
         scroll_increment = 500
         first_element_found = False
@@ -147,7 +144,6 @@ def apply_job_filters(location):
 
 
 def sign_in():
-    # TODO: Account for auto-sign in from Google etc., probably check for page title?
     config = scraper.read_config_file()
     username = config['linkedin_credentials']['username']
     password = config['linkedin_credentials']['password']
@@ -159,7 +155,7 @@ def sign_in():
     sign_in_button.click()
     try:
         WebDriverWait(driver, 10).until(ec.title_contains("Security Verification | LinkedIn"))
-        scraper.security_verification()  # TODO: Just a wait time to get past verification, need logic for it later
+        scraper.security_verification()
     except TimeoutException:
         pass
     # Wait to check that we are on the homepage:
@@ -168,7 +164,6 @@ def sign_in():
 
 def minimize_message_window():
     # Minimize messaging for better view when testing:
-    # FIXME: fix whatever is causing the crash here, then reimplement
     minimize_chevron = wait.until(ec.element_to_be_clickable(
         (By.XPATH, "//div[contains(@class, 'msg-overlay-bubble-header__controls')]//use[@href='#chevron-down-small']"))
     )
