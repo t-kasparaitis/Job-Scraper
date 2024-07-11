@@ -7,21 +7,26 @@ where company not in (
 'Phoenix Recruitment',
 'Team Remotely Inc',
 'Patterned Learning Career',
-'RemoteWorker US', -- Too much stupid spam, including survey takers...
+'RemoteWorker US', -- too much spam, including survey takers...
 'RemoteWorker UK', -- not for us market
 'TransPerfect', -- some weird in-car audio collection?
-'DolphinsElite', -- Paid subscription to apply to jobs that pay 30-40k?!
+'DolphinsElite', -- Paid subscription to apply to jobs - scam
 'Canonical', -- The company developing Ubuntu, crazy reqs & low pay
 'SynergisticIT', -- Weird youtube links in the job posting, seems to be preying on juniors
 'DataAnnotation', -- Jobs training AI to code
 'Talentify.io', -- Have to interview with an AI, mostly just data training/collection?
 'Recruiter.com', -- Some sort of scam "Check Your Email Inbox Immediately After Applying For Next Steps"
 'Providence Health & Services', -- Recruiting for medical coder, can refine sql later to make sure I don't exclude real dev jobs
+'Get It Recruit - Educational Services', -- unrelated job spam
+'FedEx Dataworks', -- phishing featuring an extremely high unrealistic salary and only 500 employees, not real FedEx
 'Actalent', -- Seems to just spam food QA jobs for Columbus, OH which aren't related to tech
 'Get It Recruit - Information Technology', -- Seems like a bad job board with way too much spam email & outdated listings
 'SimplyApply', -- Spammer, no profile 1-person LinkedIn "company", reposting JPMC jobs you could apply to directly
 'Opinion Focus Panel', -- Money for focus panels, probably a scam but also unrelated
 'AB Media Publishing, LLC', -- Money for focus panels, probably a scam but also unrelated (same description as above?)
+'Herr Alexander Wunsch', -- some sort of panel scam with bitly links
+'Ralf U. Nicole Thumm', -- some sort of panel scam with bitly links
+'Boeing Intelligence & Analytics' -- not real Boeing, scamming Social security Numbers off a fake taleo company site
 -- Unrelated listing for data entry? has to be some sort of scam, all of these have the same description:
 'Opinion Focus Panel LLC', 
 'Webpratodos Marketing Digital',
@@ -77,6 +82,8 @@ OR title ILIKE '%analyst%'
 OR title ILIKE '%system%'
 OR title ILIKE '%solution%'
 OR title ILIKE '%devops%'
+OR title ILIKE '%cloud%'
+OR title ILIKE '%aws%'
 OR title ILIKE '%reliability%'
 OR title ILIKE '%security%'
 OR title ILIKE '%firmware%'

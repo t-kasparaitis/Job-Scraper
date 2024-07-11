@@ -11,9 +11,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 class Scraper:
+    logger = None  # Allows logger to be used in our Scraper (parent) functions in addition to child classes.
     LOG_DIR = os.path.join(os.path.dirname(__file__), '..', 'logs')
 
     def __init__(self, source, site_url, **kwargs):
+        if not self.__class__.logger:
+            self.__class__.setup_logger()
         default_wait_time = 10
         default_headless = True
         self.wait_time = kwargs.get('wait_time', default_wait_time)
@@ -25,7 +28,6 @@ class Scraper:
         user_agent = kwargs.get('user_agent')
         if user_agent:
             self.options.add_argument(f'--user-agent={user_agent}')
-        self.logger = self.get_logger()
         self.scraped_job_listings = {}
         self.source = source
         self.driver = webdriver.Chrome(options=self.options)
@@ -34,36 +36,48 @@ class Scraper:
         self.wait = WebDriverWait(self.driver, self.wait_time)
 
     @classmethod
-    def get_logger(cls):
+    def setup_logger(cls):
         # Make sure the log directory exists:
         if not os.path.exists(cls.LOG_DIR):
             os.makedirs(cls.LOG_DIR)
-        logger = logging.getLogger(cls.__name__)
-        logger.setLevel(logging.INFO)
+        cls.logger = logging.getLogger(cls.__name__)
+        cls.logger.setLevel(logging.DEBUG)
         # Remove any existing handlers to avoid duplicate logs:
-        if logger.hasHandlers():
-            logger.handlers.clear()
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        if cls.logger.hasHandlers():
+            cls.logger.handlers.clear()
+        formatter = logging.Formatter('[%(asctime)s.%(msecs)03d] | %(name)s | %(levelname)s | %(message)s',
+                                      datefmt='%Y-%m-%d %H:%M:%S')
         log_file_path = os.path.join(cls.LOG_DIR, f'{cls.__name__}.log')
         file_handler = logging.FileHandler(log_file_path)
+        file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-        return logger
+        cls.logger.addHandler(file_handler)
 
-    @staticmethod
-    def read_config_file():
+    @classmethod
+    def read_config_file(cls):
         config_dir = os.path.join(os.path.dirname(__file__), '..', 'configurations')
         config_file_path = os.path.join(config_dir, 'config.ini')
         config = configparser.ConfigParser()
-        config.read(config_file_path)
-        return config
+        try:
+            config.read(config_file_path)
+            cls.logger.info("Config file loaded successfully from {}".format(config_file_path))
+            return config
+        except Exception as e:
+            cls.logger.critical("Failed to load config file from {}: {}".format(config_file_path, e))
+            raise
 
-    @staticmethod
-    def read_json_file():
+    @classmethod
+    def read_json_file(cls):
         config_dir = os.path.join(os.path.dirname(__file__), '..', 'configurations')
         json_file_path = os.path.join(config_dir, 'search_terms.json')
-        with open(json_file_path, 'r') as json_file:
-            return json.load(json_file)
+        try:
+            with open(json_file_path, 'r') as json_file:
+                json_data = json.load(json_file)
+                cls.logger.info("JSON file loaded successfully from {}".format(json_file_path))
+            return json_data
+        except Exception as e:
+            cls.logger.critical("Failed to load JSON file from {}: {}".format(json_file_path, e))
+            raise
 
     def write_to_csv(self, job_listings, filepath):
         with open(filepath, 'w', newline='', encoding='utf-8') as csv_file:

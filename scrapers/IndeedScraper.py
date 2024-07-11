@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
-from Scraper import Scraper
+from scrapers.Scraper import Scraper
 from fake_useragent import UserAgent
 
 
@@ -25,20 +25,32 @@ class IndeedScraper(Scraper):
 
 def scrape_search_terms():
     search_terms = scraper.read_json_file()
-    for term in search_terms['Indeed_Search_Terms']:
-        scraper.scraped_job_listings = {}
-        keyword = term['keyword']
-        location = term['location']
-        scraper.logger.info(f"Starting search for {keyword} in {location}")
-        input_search_keywords(keyword, location)
+    total_terms = len(search_terms['Indeed_Search_Terms'])
+    for index, term in enumerate(search_terms['Indeed_Search_Terms']):
         try:
+            scraper.scraped_job_listings = {}
+            keyword = term['keyword']
+            location = term['location']
+            scraper.logger.info(f"Starting search for {keyword} in {location}")
+            input_search_keywords(keyword, location)
             apply_job_filters(location)
             scrape_job_pages()
             csv_filepath = scraper.generate_filepath()
             scraper.write_to_csv(scraper.scraped_job_listings, csv_filepath)
+            # Go back to the main page to input search terms, unless it's the last term:
+            if index < total_terms - 1:
+                driver.get('https://www.indeed.com')
+                time.sleep(10)  # Allow some time to load the main page again
         except TimeoutException:
-            print("Unable to apply filters. This can be caused by no search results, in addition to a missing element.")
-            continue
+            inner_traceback_details = traceback.format_exc()
+            scraper.logger.error(f"An error occurred: {e}\nDetails: {inner_traceback_details}")
+            # Cover the edge case of a crash on the very last term:
+            if index >= total_terms - 1:
+                return
+            else:
+                driver.get('https://www.indeed.com')
+                time.sleep(10)  # Allow some time to load the main page again
+                continue
 
 
 def input_search_keywords(keyword, location):

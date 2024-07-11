@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.keys import Keys
-from Scraper import Scraper
+from scrapers.Scraper import Scraper
 
 
 class BuiltInScraper(Scraper):
@@ -120,7 +120,7 @@ def scrape_job_cards(list_of_elements):
         listing_id = company_title_element.get_attribute("data-builtin-track-job-id")
         # The title element contains the title, but also has a href for the link:
         title_element = element.find_element(By.CSS_SELECTOR, "h2 > a")
-        link = "https://builtin.com/" + title_element.get_attribute('href')
+        link = title_element.get_attribute('href')
         title = title_element.text
         company = company_title_element.text
         # Unfortunately, the site has a lot of nested divs without any unique identifiers. This makes grabbing some
