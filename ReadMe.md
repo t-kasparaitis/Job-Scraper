@@ -48,7 +48,16 @@ sudo zypper install python3
 sudo zypper install python3-virtualenv
 virtualenv ~/airflow_env
 source ~/airflow_env/bin/activate
-# Also need to install the latest chromedriver for running the scrapers:
+# We need to install Java which will later be used by PySpark.
+# PySpark supports Java 8, 11 & 17. Amazon has an optimized JDK for 17:
+sudo zypper addrepo https://yum.corretto.aws/corretto.repo
+sudo zypper refresh
+sudo zypper install java-17-amazon-corretto-devel
+# Also need to install chrome & chromedriver for running the scrapers:
+sudo zypper ar http://dl.google.com/linux/chrome/rpm/stable/x86_64 Google-Chrome
+sudo rpm --import https://dl.google.com/linux/linux_signing_key.pub
+sudo zypper ref
+sudo zypper install google-chrome-stable
 sudo zypper install chromedriver
 # We also need to install the same dependencies as in the Project environment:
 pip install selenium
@@ -66,9 +75,14 @@ export AIRFLOW_HOME=/mnt/c/Users/JobScraper/Documents/airflow
 export PYTHONPATH=$PYTHONPATH:/mnt/c/Users/JobScraper/PycharmProjects/Job-Scraper
 # This might be needed for helping find the classes also, not sure yet (troubleshooting):
 export PATH=$PATH:/home/tkasparaitis/airflow_env/bin
+# This sets JAVA_HOME that will be used for PySpark:
+export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+export PATH=$JAVA_HOME/bin:$PATH
 # The following avoids having to activate the venv each time a new WSL session starts.
 # This needs to be at the end of the bashrc file:
 source /home/tkasparaitis/airflow_env/bin/activate
+# Save changes and exit nano, then run the following to apply changes:
+source ~/.bashrc
 
 ```
 - Exit PowerShell and reopen it (allows for environment variable changes to take effect)
@@ -103,7 +117,14 @@ standalone | Airflow Standalone is for development purposes only. Do not use thi
 # Look for this line:
 dags_folder = /mnt/c/Users/JobScraper/Documents/airflow/dags
 # Change it to the project folder:
-dags_folder = /mnt/c/Users/JobScraper/PycharmProjects/Job-Scraper/dags
+dags_folder = /mnt/c/Users/JobScraper/PycharmProjects/Job-Scraper/dags/production
+# Look for these two parameters and change them to False:
+load_examples = False
+dags_are_paused_at_creation = False
+# Dags paused at creation seems to have caused an issue where the only way to start
+# the dag after making a new one is to run it manually, but then it also starts a scheduled
+# run at the same time. Restarting the airflow server is also not ideal.
+# There may be some other parameters to help with this, but this works for now.
 ```
 - Go to localhost:8080 and sign in to Airflow
 

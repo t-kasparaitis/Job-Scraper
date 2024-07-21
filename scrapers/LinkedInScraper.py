@@ -3,28 +3,35 @@ import random
 from datetime import datetime
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from scrapers.Scraper import Scraper
 import traceback
+import os
 
 
 class LinkedInScraper(Scraper):
     def __init__(self, **kwargs):
-        # TODO: remove wait_time=30 after finishing DAG testing, so default wait is back to 10sec:
-        super().__init__('LinkedIn', 'https://www.linkedin.com/login', wait_time=30, **kwargs)
-        self.logger.info(f"{self.__class__.__name__} initialized")
+        super().__init__('LinkedIn', 'https://www.linkedin.com/login', **kwargs)
+        self.logger.info(f"Success: {self.__class__.__name__} initialized")
 
     def run(self):
         try:
             self.sign_in()
             self.scrape_search_terms()
         except Exception as e:
-            pt = self.driver.title  # Get the page title for crashes to provide more detail
-            tb = traceback.format_exc()
-            self.logger.error(f"An error occurred: {type(e).__name__}, {e}\nOn page: {pt}\n{tb}")
+            current_page_title = self.driver.title  # Get the page title for crashes to provide more detail
+            stack_trace = traceback.format_exc()
+            self.logger.error(
+                f"Failure: {type(e).__name__}, {e}\nOn page: {current_page_title}\n{stack_trace}")
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M')
+            screenshot_name = f'{self.source}_{timestamp}_Error_Screenshot.png'
+            screenshot_dir = os.path.join(os.path.dirname(__file__), '..', 'logs')
+            os.makedirs(screenshot_dir, exist_ok=True)
+            screenshot_filepath = os.path.join(screenshot_dir, screenshot_name)
+            self.driver.save_screenshot(screenshot_filepath)
+            raise
         finally:
             self.close()
 
@@ -53,7 +60,7 @@ class LinkedInScraper(Scraper):
                     By.XPATH, ".//div[contains(@class, 'artdeco-entity-lockup__metadata')]").text
                 self.scraped_job_listings[listing_id] = {
                     'link': link,
-                    'source': "LinkedIn",
+                    'source': self.source,
                     'title': title,
                     'company': company,
                     'time_when_scraped': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -88,7 +95,8 @@ class LinkedInScraper(Scraper):
             if self.get_next_page() is None:
                 break
             self.get_next_page().click()
-            time.sleep(random.uniform(7, 12))  # Introduced higher floor for "things aren't loading" (rate-limiting?)
+            # Increased the low-end of the range to counter occasional rate-limiting (message: "things aren't loading"?)
+            time.sleep(random.uniform(7, 12))
 
     def apply_job_filters(self, location):
         # aria-label="Show all filters. Clicking this button displays all available filter options."
@@ -163,13 +171,18 @@ class LinkedInScraper(Scraper):
         sign_in_button = self.wait.until(ec.element_to_be_clickable((By.XPATH, "//button[@aria-label='Sign in']")))
         sign_in_button.click()
         try:
-            WebDriverWait(self.driver, 10).until(ec.title_contains("Security Verification | LinkedIn"))
-            self.security_verification()
+            # Wait to check that we are on the homepage:
+            self.wait.until(ec.title_contains("Feed | LinkedIn"))
         except TimeoutException:
-            self.logger.critical("Failed to sign in within the allotted amount of time")
-            raise
-        # Wait to check that we are on the homepage:
-        self.wait.until(ec.title_contains("Feed | LinkedIn"))
+            current_page_title = self.driver.title
+            # When LinkedIn bot detection catches us due to login attempts the title contains Security Verification:
+            if "Security Verification" in current_page_title:
+                self.logger.critical("Caught by LinkedIn's bot detection during sign in")
+                self.security_verification()
+            # If we are not caught due to bot detection, then we have a different sort of problem:
+            else:
+                self.logger.critical("Failed to sign in within the allotted amount of time")
+                raise
 
     def minimize_message_window(self):
         # Minimize messaging for better view when testing:
@@ -211,7 +224,7 @@ class LinkedInScraper(Scraper):
             keyword = term['keyword']
             location = term['location']
             self.navigate_to_jobs()
-            self.logger.info(f"Starting search for {keyword} in {location}")
+            self.logger.info(f"Start: Searching for {keyword} in {location}")
             self.input_search_keywords(keyword, location)
             self.scrape_job_pages(location)
             csv_filepath = self.generate_filepath()
