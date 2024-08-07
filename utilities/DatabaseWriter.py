@@ -25,7 +25,8 @@ class DatabaseWriter:
             for csv in files:
                 try:
                     self.write_to_database(csv)
-                    self.move_csv_file(csv)
+                    folder = 'Processed'
+                    self.move_csv_file(csv, folder)
                 except Exception as e:
                     stack_trace = traceback.format_exc()
                     self.logger.debug(f"Failure: {e}\n While handling {csv}\n{stack_trace}")
@@ -70,37 +71,45 @@ class DatabaseWriter:
             cls.logger.critical("Failure: Could not load config file from {}: {}".format(config_file_path, e))
             raise
 
-    def write_to_database(self, filepath):
+    def write_to_database(self, csv_file):
+        host = self.config['database']['host']
+        port = self.config['database']['port']
+        database = self.config['database']['database']
+        connection_url = f"jdbc:postgresql://{host}:{port}/{database}"
+        connection_properties = {
+            "user": self.config['database']['username'],
+            "password": self.config['database']['password'],
+            "driver": "org.postgresql.Driver"
+        }
         try:
-            host = self.config['database']['host']
-            port = self.config['database']['port']
-            database = self.config['database']['database']
-            connection_url = f"jdbc:postgresql://{host}:{port}/{database}"
-            connection_properties = {
-                "user": self.config['database']['username'],
-                "password": self.config['database']['password'],
-                "driver": "org.postgresql.Driver"
-            }
-
             dataframe = (self.spark.read.option("encoding", "utf-8")
                          .option("multiline", "true")
                          .option("escapeQuote", "true")
-                         .csv(filepath, header=True))
+                         .csv(csv_file, header=True))
+
+            # Sometimes a CSV will have no results only a header:
+            if dataframe is None or dataframe.rdd.isEmpty():
+                self.logger.warning(f"Warning: The DataFrame is empty or None for file: {csv_file}")
+                return
+
             # LinkedIn logic currently grabs some things that may not be valid IDs (numbers only). This needs filtered:
             if dataframe.first()['source'] == "LinkedIn":
                 dataframe = dataframe.filter(~col('listing_id').rlike('[^0-9]'))
+
             db_dataframe = (self.spark.read.jdbc(
                 url=connection_url,
                 table="job_listings",
                 properties=connection_properties
             ).select("listing_id", "source"))
+
             dataframe = dataframe.join(db_dataframe, on=["listing_id", "source"], how="left_anti")
 
-            # It's possible that a dataframe is empty/already scraped for specific or less popular search terms:
+            # It's possible that there's no new unique listings for specific search terms since the last run:
             if dataframe.isEmpty():
-                self.logger.warning(f"Warning: The DataFrame is empty for file: {filepath}")
+                self.logger.warning(f"Warning: No new data to write to the database for file: {csv_file}")
                 return
-            (dataframe.select(
+
+            dataframe.select(
                 ["listing_id",
                  "source",
                  "title",
@@ -108,11 +117,14 @@ class DatabaseWriter:
                  "link",
                  col("time_when_scraped").cast("timestamp"),
                  "location",
-                 "compensation"])
-             .write.jdbc(url=connection_url, table="job_listings", mode="append", properties=connection_properties))
+                 "compensation"]
+            ).write.jdbc(url=connection_url, table="job_listings", mode="append", properties=connection_properties)
+
         except Exception as e:
             stack_trace = traceback.format_exc()
             self.logger.error(f"Failure: {type(e).__name__}, {e}\n{stack_trace}")
+            folder = 'Errors'
+            self.move_csv_file(csv_file, folder)
             raise
 
     def get_csv_files(self):
@@ -123,8 +135,8 @@ class DatabaseWriter:
                 csv_files.append(os.path.join(csv_path, file))
         return csv_files
 
-    def move_csv_file(self, csv_file):
-        destination_folder = os.path.join(self.get_base_path(), 'Processed')
+    def move_csv_file(self, csv_file, folder):
+        destination_folder = os.path.join(self.get_base_path(), folder)
         if not os.path.exists(destination_folder):
             os.makedirs(destination_folder)
         destination_path = os.path.join(destination_folder, os.path.basename(csv_file))

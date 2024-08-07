@@ -8,8 +8,8 @@ import pendulum
 default_args = {
     'owner': 'airflow',
     # A start date of 2024-07-01 would mean the task triggers at 2024-07-01T23:59. This provides enough wiggle room
-    # to make sure that the DAG starts at the next 4-hour interval. When Airflow is turned on with catchup=False
-    # then there is no catch up and it runs at the next scheduled interval (4 hours in our case).
+    # to make sure that the DAG starts at the next 8-hour interval. When Airflow is turned on with catchup=False
+    # then there is no catch up and it runs at the next scheduled interval (8 hours in our case).
     'start_date': pendulum.datetime(2024, 7, 1, tz="America/New_York"),
     'depends_on_past': False,
     'retries': 1,
@@ -23,7 +23,7 @@ dag = DAG(
     catchup=False,
     default_args=default_args,
     description='This DAG scrapes Indeed based on search_terms.json and writes each result set to a CSV file.',
-    schedule_interval=timedelta(hours=4),
+    schedule_interval=timedelta(hours=8),
     tags=['scraper', 'Indeed']
 )
 

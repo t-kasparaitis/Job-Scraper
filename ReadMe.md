@@ -59,13 +59,48 @@ sudo rpm --import https://dl.google.com/linux/linux_signing_key.pub
 sudo zypper ref
 sudo zypper install google-chrome-stable
 sudo zypper install chromedriver
+# We will need PostgreSQL to run Airflow in production mode isntead of standalone:
+sudo zypper install postgresql postgresql-server
+# postgresql-server installs with a default user but you need to set a password first:
+sudo passwd postgres
+# Create data directory & initialize the database:
+sudo mkdir -p /var/lib/pgsql/data
+sudo chown postgres:postgres /var/lib/pgsql/data
+sudo su - postgres
+initdb -D /var/lib/pgsql/data
+exit
+# Installation needs this directory for logging, but it's not created automatically:
+sudo mkdir -p /run/postgresql
+sudo chown postgres:postgres /run/postgresql
+sudo chmod 775 /run/postgresql
+# Start the postgres server:
+sudo su - postgres -c "pg_ctl start -D /var/lib/pgsql/data"
+# Note: for some reason db ownership needs to go to the created user to fix this error:
+# sqlalchemy.exc.ProgrammingError: (psycopg2.errors.InsufficientPrivilege) permission denied for schema public
+# Need to create an airflow_user for the database:
+sudo su - postgres
+psql
+CREATE DATABASE airflow_db;
+CREATE USER airflow_user WITH ENCRYPTED PASSWORD 'airflow_pass';
+GRANT ALL PRIVILEGES ON DATABASE airflow_db TO airflow_user;
+ALTER USER airflow_user SET search_path = public;
+ALTER DATABASE airflow_db OWNER TO airflow_user;
+\q
 # We also need to install the same dependencies as in the Project environment:
 pip install selenium
 pip install pyspark
 pip install fake-useragent
+# Psycopg2 is the airflow-recommended driver:
+pip install psycopg2-binary
+# Add postgres subpackage:
+pip install 'apache-airflow[postgres]'
 # We are now using bash commands to make a directory on our C drive:
 cd /mnt/c/Users/JobScraper/Documents
 mkdir airflow
+# Get the JDBC PostgreSQL driver for our WSL venv:
+cd /home/tkasparaitis/airflow_env/lib/python3.11/site-packages/pyspark/jars
+# Double check it matches the jar in the Windows venv for consistency:
+wget https://jdbc.postgresql.org/download/postgresql-42.7.3.jar
 # Install nano for convenience, then create an environment variable:
 sudo zypper install nano
 sudo nano ~/.bashrc
@@ -78,6 +113,8 @@ export PATH=$PATH:/home/tkasparaitis/airflow_env/bin
 # This sets JAVA_HOME that will be used for PySpark:
 export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
 export PATH=$JAVA_HOME/bin:$PATH
+# This is the driver needed for PySpark to communicate with Postgre:
+export CLASSPATH=$CLASSPATH:/home/tkasparaitis/airflow_env/lib/python3.11/site-packages/pyspark/jars/postgresql-42.7.3.jar
 # The following avoids having to activate the venv each time a new WSL session starts.
 # This needs to be at the end of the bashrc file:
 source /home/tkasparaitis/airflow_env/bin/activate
@@ -99,15 +136,20 @@ pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}
 
 
 cd $AIRFLOW_HOME
-# Not sure db init is necessary, deprecation warning:
-airflow db init
-# Following Apache guide, using this for quick development (not meant for production).
-# Note: 'airflow standalone' is the command for starting the web server & scheduler in one command:
-airflow standalone
-# After airflow starts you will see the following:
-standalone | Login with username: admin  password: ${redacted}
-standalone | Airflow Standalone is for development purposes only. Do not use this in production!
-# That username/password will get you access to the webserver running on localhost:8080
+# db init is now deprecated, have to use db migrate:
+airflow db migrate
+# create an admin account:
+airflow users create \
+          --username admin \
+          --firstname Tomas \
+          --lastname Kasparaitis \
+          --role Admin \
+          --email tkasparaitis@gmail.com
+# if admin account exits, then change the password:
+airflow users reset-password --username admin
+# airflow standalone is for single-task development only, start separately for production:
+airflow webserver -p 8080 &
+airflow scheduler &
 
 
 ```
@@ -125,8 +167,26 @@ dags_are_paused_at_creation = False
 # the dag after making a new one is to run it manually, but then it also starts a scheduled
 # run at the same time. Restarting the airflow server is also not ideal.
 # There may be some other parameters to help with this, but this works for now.
+# Look for executor and change it to LocalExecutor (single-machine production):
+executor = LocalExecutor
+# Look for sql_alchemy_conn & change it to:
+sql_alchemy_conn = postgresql+psycopg2://airflow_user:airflow_pass@localhost/airflow_db
+
 ```
 - Go to localhost:8080 and sign in to Airflow
+
+### Starting Airflow
+```
+# This directory is needed for logging, but doesn't persist between reboots on WSL as it is at temp dir:
+sudo mkdir -p /run/postgresql
+sudo chown postgres:postgres /run/postgresql
+sudo chmod 775 /run/postgresql
+# After creating the dir, can start the PostgreSQL server:
+sudo su - postgres -c "pg_ctl start -D /var/lib/pgsql/data"
+# Afterwards can start the airflow scheduler & webserver as background processes:
+airflow webserver -p 8080 &
+airflow scheduler &
+```
 
 ### DBeaver (DBMS)
 - Download & install from https://dbeaver.io/download/
