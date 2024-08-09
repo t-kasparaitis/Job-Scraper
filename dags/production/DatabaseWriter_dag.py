@@ -9,7 +9,7 @@ default_args = {
     'owner': 'airflow',
     # Our scraper DAGs have a start time of midnight. Adding 1 hour offset as mostly this is how long it should take
     # to run. An alternative would be to call the DatabaseWrite_dag.py at the end of each Scraper run.
-    'start_date': pendulum.datetime(2024, 7, 1, 1, tz="America/New_York"),
+    'start_date': pendulum.datetime(2024, 7, 1, 1, 0, tz="America/New_York"),
     'depends_on_past': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=15)
