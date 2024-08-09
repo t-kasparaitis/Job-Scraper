@@ -26,7 +26,7 @@ where company not in (
 'AB Media Publishing, LLC', -- Money for focus panels, probably a scam but also unrelated (same description as above?)
 'Herr Alexander Wunsch', -- some sort of panel scam with bitly links
 'Ralf U. Nicole Thumm', -- some sort of panel scam with bitly links
-'Boeing Intelligence & Analytics' -- not real Boeing, scamming Social security Numbers off a fake taleo company site
+'Boeing Intelligence & Analytics', -- not real Boeing, scamming Social security Numbers off a fake taleo company site
 -- Unrelated listing for data entry? has to be some sort of scam, all of these have the same description:
 'Opinion Focus Panel LLC', 
 'Webpratodos Marketing Digital',
@@ -117,12 +117,21 @@ order by time_when_scraped desc
 --ORDER BY date_only;
 
 -- Get jobs per week:
---SELECT EXTRACT(YEAR FROM time_when_scraped) AS year,
---       EXTRACT(WEEK FROM time_when_scraped) AS week,
---       COUNT(*) AS number_of_jobs_posted
---FROM job_listings jl 
---GROUP BY EXTRACT(YEAR FROM time_when_scraped), EXTRACT(WEEK FROM time_when_scraped)
---ORDER BY year, week;
+--SELECT 
+--    EXTRACT(YEAR FROM time_when_scraped) AS year,
+--    TRIM(TO_CHAR(DATE_TRUNC('week', time_when_scraped), 'Month')) || ' ' ||
+--    TO_CHAR(DATE_TRUNC('week', time_when_scraped), 'DD') || ' - ' ||
+--    TRIM(TO_CHAR(DATE_TRUNC('week', time_when_scraped) + INTERVAL '6 days', 'Month')) || ' ' ||
+--    TO_CHAR(DATE_TRUNC('week', time_when_scraped) + INTERVAL '6 days', 'DD') AS week_range,
+--    COUNT(*) AS number_of_jobs_posted
+--FROM 
+--    job_listings jl 
+--GROUP BY 
+--    EXTRACT(YEAR FROM time_when_scraped),
+--    DATE_TRUNC('week', time_when_scraped)
+--ORDER BY 
+--    year,
+--    DATE_TRUNC('week', time_when_scraped);
 
 -- Get jobs per year:
 --SELECT EXTRACT(YEAR FROM time_when_scraped) AS year,

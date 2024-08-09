@@ -10,7 +10,7 @@ default_args = {
     # A start date of 2024-07-01 would mean the task triggers at 2024-07-01T23:59. This provides enough wiggle room
     # to make sure that the DAG starts at the next 8-hour interval. When Airflow is turned on with catchup=False
     # then there is no catch up and it runs at the next scheduled interval (8 hours in our case).
-    'start_date': pendulum.datetime(2024, 7, 1, tz="America/New_York"),
+    'start_date': pendulum.datetime(2024, 7, 1, 0, 0, tz="America/New_York"),
     'depends_on_past': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=15)
